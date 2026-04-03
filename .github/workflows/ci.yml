@@ -23,12 +23,53 @@ jobs:
 
       - run: npm ci
 
+      - run: npm audit --audit-level=high
+
       - run: npm run build
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_COGNITO_USER_POOL_ID: ${{ secrets.VITE_COGNITO_USER_POOL_ID }}
           VITE_COGNITO_CLIENT_ID: ${{ secrets.VITE_COGNITO_CLIENT_ID }}
           VITE_AWS_REGION: ${{ secrets.VITE_AWS_REGION }}
+
+  backend:
+    name: Backend — audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm install
+
+      - run: npm audit --audit-level=high
+
+  kics:
+    name: KICS — IaC security scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run KICS scan
+        uses: checkmarx/kics-github-action@v2
+        with:
+          path: infrastructure
+          fail_on: high
+          output_path: kics-results
+          output_formats: json,sarif
+
+      - name: Upload KICS results to GitHub Security tab
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: kics-results/results.sarif
 
   terraform:
     name: Terraform — plan
