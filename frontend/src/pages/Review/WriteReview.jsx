@@ -6,27 +6,27 @@ import Footer from '../../components/layout/Footer'
 import { getUniversities, getUniversityResidences } from '../../services/universities'
 import { createReview } from '../../services/reviews'
 import { useAuth } from '../../context/AuthContext'
-import { Container, BtnAccent, BtnOutline, BtnLinkPrimary } from '../../styles/shared'
+import { Container, BtnLinkPrimary } from '../../styles/shared'
 
 const AMENITIES = [
-  { key: 'wifi', label: 'WiFi', icon: '📶' },
-  { key: 'elevator', label: 'Elevator', icon: '🛗' },
-  { key: 'laundry', label: 'Laundry', icon: '🧺' },
-  { key: 'studyRoom', label: 'Study Room', icon: '📚' },
-  { key: 'diningHall', label: 'Dining Hall', icon: '🍽️' },
-  { key: 'tuckshop', label: 'Tuckshop', icon: '🛒' },
-  { key: 'tvLounge', label: 'TV Lounge', icon: '📺' },
-  { key: 'gym', label: 'Gym', icon: '🏋️' },
-  { key: 'computerRoom', label: 'Computer Room', icon: '💻' },
-  { key: 'airConditioning', label: 'Air Conditioning', icon: '❄️' },
-  { key: 'parking', label: 'Parking', icon: '🚗' },
-  { key: 'shuttle', label: 'Shuttle', icon: '🚌' },
+  { key: 'wifi',            label: 'WiFi',          icon: 'wifi' },
+  { key: 'elevator',        label: 'Elevator',       icon: 'elevator' },
+  { key: 'laundry',         label: 'Laundry',        icon: 'local_laundry_service' },
+  { key: 'studyRoom',       label: 'Study Room',     icon: 'menu_book' },
+  { key: 'diningHall',      label: 'Dining Hall',    icon: 'restaurant' },
+  { key: 'tuckshop',        label: 'Tuckshop',       icon: 'storefront' },
+  { key: 'tvLounge',        label: 'TV Lounge',      icon: 'tv' },
+  { key: 'gym',             label: 'Gym',            icon: 'fitness_center' },
+  { key: 'computerRoom',    label: 'Computer Room',  icon: 'computer' },
+  { key: 'airConditioning', label: 'Air Con',        icon: 'ac_unit' },
+  { key: 'parking',         label: 'Parking',        icon: 'local_parking' },
+  { key: 'shuttle',         label: 'Shuttle',        icon: 'directions_bus' },
 ]
 
 const YEARS = Array.from({ length: 11 }, (_, i) => 2025 - i)
-const STEPS = ['Residence', 'Ratings', 'Amenities', 'Done']
+const STEPS = ['Residence', 'Ratings', 'Amenities', 'Submit']
 
-/* ── Styled Components ── */
+/* ─── Page shell ─── */
 
 const Page = styled.div`
   min-height: 100vh;
@@ -36,185 +36,361 @@ const Page = styled.div`
   overflow-x: hidden;
 `
 
-const Hero = styled.div`
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.primaryDark}, ${({ theme }) => theme.colors.primary});
-  padding: 3rem 0 4rem;
-  color: #fff;
+/* ─── Step 1: purple hero ─── */
+
+const Hero = styled.section`
+  background: ${({ theme }) => theme.colors.primary};
+  padding: calc(${({ theme }) => theme.navHeight} + 2.5rem) 1.5rem 8rem;
+  overflow: hidden;
+  position: relative;
 `
 
-const HeroTitle = styled.h1`
+const HeroGlow = styled.div`
+  position: absolute;
+  top: -60px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: rgba(249, 115, 22, 0.12);
+  filter: blur(80px);
+  pointer-events: none;
+`
+
+const HeroInner = styled.div`
+  max-width: 720px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+`
+
+const StepBadge = styled.span`
+  display: inline-block;
+  padding: 0.2rem 0.85rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border-radius: ${({ theme }) => theme.radii.full};
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+`
+
+const HeroTitle = styled.h2`
   font-family: ${({ theme }) => theme.fonts.display};
-  font-size: 2rem;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
   font-weight: 800;
+  color: #fff;
   letter-spacing: -0.02em;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.4rem;
 `
 
 const HeroSub = styled.p`
-  opacity: 0.8;
+  color: rgba(255, 255, 255, 0.85);
   font-size: 1rem;
   margin-bottom: 2rem;
 `
 
-const StepIndicator = styled.div`
+const ProgressBars = styled.div`
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  margin-top: 2rem;
 
-  @media (max-width: 640px) {
+  @media (max-width: 480px) {
     gap: 0.5rem;
   }
 `
 
-const StepPill = styled.div`
+const ProgressSegment = styled.div`
+  flex: 1;
+`
+
+const ProgressBar = styled.div`
+  height: 6px;
+  width: 100%;
+  background: ${({ $done }) => $done ? '#fff' : 'rgba(255,255,255,0.2)'};
+  border-radius: 999px;
+`
+
+const ProgressLabel = styled.p`
+  font-size: 0.65rem;
+  font-weight: ${({ $done }) => $done ? 700 : 500};
+  color: ${({ $done }) => $done ? '#fff' : 'rgba(255,255,255,0.4)'};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.4rem;
+`
+
+/* ─── Steps 2-4: inline progress header ─── */
+
+const ProgressHeader = styled.div`
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 0;
+`
+
+const ProgressTop = styled.div`
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: ${({ $active, $done }) =>
-    ($active || $done) ? '0.45rem 1.1rem' : '0.45rem 1.1rem'};
-  border-radius: ${({ theme }) => theme.radii.full};
-  background: ${({ $active, $done }) =>
-    $active ? 'rgba(255,255,255,0.28)' :
-    $done ? 'rgba(255,255,255,0.22)' :
-    'rgba(255,255,255,0.15)'};
-  color: ${({ $active, $done }) =>
-    $active ? '#fff' :
-    $done ? 'rgba(255,255,255,0.9)' :
-    'rgba(255,255,255,0.65)'};
-  font-size: ${({ theme: _ }) => '0.85rem'};
-  font-weight: 600;
-  box-shadow: ${({ $active }) => $active ? '0 0 0 2px rgba(255,255,255,0.5)' : 'none'};
-  transition: background 0.2s, color 0.2s;
-
-  @media (max-width: 640px) {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.85rem;
-  }
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
 `
 
-const StepNum = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 50%;
-  background: ${({ $active, $done }) =>
-    $active ? '#fff' :
-    $done ? 'rgba(255,255,255,0.3)' :
-    'rgba(255,255,255,0.2)'};
-  color: ${({ $active, theme }) => $active ? theme.colors.primary : 'inherit'};
-  font-size: 0.75rem;
+const ProgressStepLabel = styled.span`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.primary};
 `
+
+const ProgressTitle = styled.h2`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 800;
+  color: ${({ theme }) => theme.colors.onSurface};
+  letter-spacing: -0.02em;
+  margin-top: 0.25rem;
+`
+
+const ProgressPct = styled.span`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.9rem;
+`
+
+const ProgressTrack = styled.div`
+  height: 8px;
+  width: 100%;
+  background: ${({ theme }) => theme.colors.surfaceHigh};
+  border-radius: 999px;
+  overflow: hidden;
+`
+
+const ProgressFill = styled.div`
+  height: 100%;
+  width: ${({ $pct }) => $pct}%;
+  background: ${({ theme }) => theme.colors.primary};
+  border-radius: 999px;
+  transition: width 0.5s ease;
+`
+
+/* ─── Body / card ─── */
 
 const Body = styled.div`
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 0 1rem 4rem;
-  margin-top: -2rem;
+  padding: 0 1rem 5rem;
+  margin-top: ${({ $heroOverlap }) => $heroOverlap ? '-5rem' : '0'};
 `
 
 const CardEl = styled.div`
   background: ${({ theme }) => theme.colors.surfaceCard};
-  border-radius: ${({ theme }) => theme.radii.lg};
+  border-radius: ${({ theme }) => theme.radii.xl};
   box-shadow: ${({ theme }) => theme.shadows.float};
   width: 100%;
-  max-width: 680px;
+  max-width: 720px;
   overflow: hidden;
+  position: relative;
+  z-index: 2;
 `
 
 const StepContent = styled.div`
   padding: 2.5rem 2.5rem 2rem;
-  text-align: ${({ $center }) => $center ? 'center' : 'left'};
 
   @media (max-width: 640px) {
     padding: 1.75rem 1.25rem 1.5rem;
   }
 `
 
-const StepTitle = styled.h2`
+const SectionTitle = styled.h3`
   font-family: ${({ theme }) => theme.fonts.display};
-  font-size: 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.onSurface};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+
+  .material-symbols-outlined {
+    color: ${({ theme }) => theme.colors.primary};
+    font-size: 1.25rem;
+  }
+`
+
+const Field = styled.div`
+  margin-bottom: 1.75rem;
+`
+
+const FieldLabel = styled.label`
+  display: block;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.onSurface};
+  margin-bottom: 0.75rem;
+`
+
+const SelectWrap = styled.div`
+  position: relative;
+`
+
+const StyledSelect = styled.select`
+  width: 100%;
+  height: 56px;
+  padding: 0 3rem 0 1.25rem;
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border: none;
+  border-radius: ${({ theme }) => theme.radii.xl};
+  color: ${({ theme }) => theme.colors.onSurface};
+  font-size: 0.95rem;
+  font-family: inherit;
+  appearance: none;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}33;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const SelectIcon = styled.span`
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: ${({ theme }) => theme.colors.muted};
+  font-size: 1.25rem;
+`
+
+const RadioCards = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const RadioCard = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.radii.xl};
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border: 2px solid ${({ $checked, theme }) => $checked ? theme.colors.primary : 'transparent'};
+  background: ${({ $checked }) => $checked ? 'rgba(79,70,229,0.05)' : undefined};
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  input { accent-color: ${({ theme }) => theme.colors.primary}; }
+  font-size: 0.9rem;
+  font-weight: 500;
+`
+
+/* ─── Step 1 Continue button (orange/tertiary) ─── */
+
+const ContinueBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.1rem 2rem;
+  background: ${({ theme }) => theme.colors.tertiaryBadge};
+  color: #fff;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: ${({ theme }) => theme.radii.full};
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  box-shadow: 0 8px 20px ${({ theme }) => theme.colors.tertiaryBadge}40;
+
+  &:hover:not(:disabled) { background: #7b3300; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+`
+
+const AnonNote = styled.p`
+  text-align: center;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-top: 1.25rem;
+  font-weight: 500;
+`
+
+/* ─── Info cards below Step 1 ─── */
+
+const InfoCards = styled.div`
+  max-width: 720px;
+  margin: 1.5rem auto 0;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`
+
+const InfoCard = styled.div`
+  background: ${({ $primary, theme }) => $primary ? theme.colors.primaryFixed : '#e3dfff'};
+  padding: 1.25rem;
+  border-radius: ${({ theme }) => theme.radii.xl};
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`
+
+const InfoIconBox = styled.div`
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: ${({ theme }) => theme.radii.full};
+  background: ${({ theme }) => theme.colors.primary}1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ theme }) => theme.colors.primary};
+
+  .material-symbols-outlined { font-size: 1.1rem; }
+`
+
+const InfoText = styled.div``
+
+const InfoTitle = styled.h4`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 0.85rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.onSurface};
   margin-bottom: 0.25rem;
 `
 
-const StepSub = styled.p`
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  font-size: 0.9rem;
-  margin-bottom: 2rem;
-`
-
-const Field = styled.div`
-  margin-bottom: 1.5rem;
-`
-
-const Label = styled.label`
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.onSurface};
-  margin-bottom: 0.5rem;
-`
-
-const Optional = styled.span`
-  font-weight: 400;
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
-`
-
-const SELECT_ARROW = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")"
-
-const Select = styled.select`
-  width: 100%;
-  padding: 0.7rem 1rem;
-  border: 1.5px solid #e2e4e9;
-  border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ theme }) => theme.colors.surfaceCard};
-  color: ${({ theme }) => theme.colors.onSurface};
-  font-size: 0.9rem;
-  appearance: none;
-  background-image: ${SELECT_ARROW};
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  cursor: pointer;
-  transition: border-color 0.15s;
-  font-family: inherit;
-
-  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.primary}; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-`
-
-const RadioGroup = styled.div`
-  display: flex;
-  gap: 1.5rem;
-`
-
-const RadioLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-
-  input[type="radio"] {
-    accent-color: ${({ theme }) => theme.colors.primary};
-    width: 1rem;
-    height: 1rem;
-  }
-`
-
-const AnonNote = styled.p`
+const InfoDesc = styled.p`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  margin-bottom: 1.5rem;
+  line-height: 1.5;
 `
 
-const RatingsBlock = styled.div`
-  border: 1.5px solid #f0f1f3;
-  border-radius: ${({ theme }) => theme.radii.md};
-  overflow: hidden;
+/* ─── Step 2: ratings ─── */
+
+const RatingsCard = styled.div`
+  background: ${({ theme }) => theme.colors.surfaceCard};
+  border-radius: ${({ theme }) => theme.radii.xl};
+  padding: 2rem;
+  box-shadow: 0 4px 24px rgba(25,28,30,0.04);
   margin-bottom: 1.5rem;
 `
 
@@ -222,168 +398,331 @@ const StarRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.9rem 1.25rem;
-  border-bottom: 1px solid #f0f1f3;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.colors.surfaceHigh};
 
   &:last-child { border-bottom: none; }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 `
 
 const StarRowLabel = styled.span`
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.onSurface};
-`
-
-const StarsRow = styled.div`
-  display: flex;
-  gap: 0.2rem;
-`
-
-const StarBtn = styled.button`
-  font-size: 1.6rem;
-  color: ${({ $filled }) => $filled ? '#F59E0B' : '#d1d5db'};
-  transition: color 0.1s, transform 0.1s;
-  line-height: 1;
-  padding: 0;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transform: ${({ $filled }) => $filled ? 'scale(1.1)' : 'none'};
-
-  &:hover { color: #F59E0B; transform: scale(1.1); }
-`
-
-const ToggleGroup = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-`
-
-const ToggleBtn = styled.button`
-  padding: 0.5rem 1.1rem;
-  border-radius: ${({ theme }) => theme.radii.full};
-  border: 1.5px solid ${({ $active, theme }) => $active ? theme.colors.primary : '#e2e4e9'};
-  background: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.surfaceCard};
-  color: ${({ $active, theme }) => $active ? '#fff' : theme.colors.onSurfaceMuted};
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.15s;
-  cursor: pointer;
-  font-family: inherit;
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.primary};
-    color: ${({ $active }) => $active ? '#fff' : '#4F46E5'};
-  }
-`
-
-const RecommendGroup = styled.div`
-  display: flex;
-  gap: 1rem;
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-  }
-`
-
-const RecommendBtn = styled.button`
-  flex: 1;
-  padding: 1rem;
-  border-radius: ${({ theme }) => theme.radii.md};
-  border: 2px solid ${({ $yes, $no }) => $yes ? '#4F46E5' : $no ? '#ef4444' : '#e2e4e9'};
-  background: ${({ $yes, $no }) => $yes ? '#4F46E5' : $no ? '#ef4444' : '#ffffff'};
-  color: ${({ $yes, $no }) => ($yes || $no) ? '#fff' : '#6b7280'};
-  font-size: 1rem;
+  font-family: ${({ theme }) => theme.fonts.display};
   font-weight: 600;
-  transition: all 0.15s;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  font-size: 0.95rem;
+`
+
+const Stars = styled.div`
+  display: flex;
+  gap: 0.35rem;
+`
+
+const StarIcon = styled.span`
+  font-size: 1.75rem;
   cursor: pointer;
-  font-family: inherit;
+  color: ${({ $filled }) => $filled ? '#4F46E5' : '#e0e3e5'};
+  font-variation-settings: ${({ $filled }) => $filled ? "'FILL' 1" : "'FILL' 0"};
+  transition: color 0.1s, font-variation-settings 0.1s, transform 0.1s;
+  transform: ${({ $filled }) => $filled ? 'scale(1.1)' : 'none'};
+  user-select: none;
 
   &:hover {
-    border-color: ${({ $no }) => $no ? '#ef4444' : '#4F46E5'};
-    color: ${({ $yes, $no }) => ($yes || $no) ? '#fff' : '#4F46E5'};
+    color: #4F46E5;
+    font-variation-settings: 'FILL' 1;
+    transform: scale(1.1);
   }
 `
 
-const AmenityGrid = styled.div`
+const SpecRow = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem;
-  margin-bottom: 1.75rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
+`
+
+const SpecCard = styled.div`
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border-radius: ${({ theme }) => theme.radii.xl};
+  padding: 1.25rem;
+`
+
+const SpecLabel = styled.p`
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-bottom: 0.75rem;
+`
+
+const PillGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`
+
+const Pill = styled.button`
+  padding: 0.4rem 1rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.surfaceHigh};
+  color: ${({ $active, theme }) => $active ? '#fff' : theme.colors.onSurfaceMuted};
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.outlineVariant};
+  }
+`
+
+const RecommendSection = styled.div`
+  background: rgba(79, 70, 229, 0.05);
+  border: 2px solid rgba(79, 70, 229, 0.1);
+  border-radius: ${({ theme }) => theme.radii.xl};
+  padding: 1.5rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1.25rem;
+  }
+`
+
+const RecommendText = styled.div``
+
+const RecommendTitle = styled.h3`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
+`
+
+const RecommendSub = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-top: 0.2rem;
+`
+
+const RecommendToggle = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+`
+
+const RecommendOpt = styled.button`
+  flex: 1;
+  padding: 0.7rem 2rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: 2px solid ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.outlineVariant};
+  background: ${({ $active, theme }) => $active ? theme.colors.primary : '#fff'};
+  color: ${({ $active, theme }) => $active ? '#fff' : theme.colors.onSurface};
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  ${({ $active }) => $active && 'box-shadow: 0 4px 12px rgba(79,70,229,0.25);'}
+
+  @media (max-width: 640px) {
+    padding: 0.7rem 1.25rem;
+  }
+`
+
+/* ─── Floating action bar (step 2) ─── */
+
+const FloatBar = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(199, 196, 216, 0.2);
+  padding: 1rem 1.5rem;
+  z-index: 100;
+
+  @media (max-width: 768px) {
+    padding-bottom: calc(1rem + 64px);
+  }
+`
+
+const FloatBarInner = styled.div`
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+`
+
+const BackBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.85rem 1.5rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.primary};
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: rgba(79, 70, 229, 0.06); }
+`
+
+const NextBtn = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 2.5rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 8px 20px ${({ theme }) => theme.colors.primary}50;
+
+  &:hover:not(:disabled) { opacity: 0.9; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+`
+
+/* ─── Step 3: amenities ─── */
+
+const AmenityGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
 `
 
 const AmenityItem = styled.label`
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem 0.9rem;
-  border: 1.5px solid ${({ $checked, theme }) => $checked ? theme.colors.primary : '#e2e4e9'};
-  border-radius: ${({ theme }) => theme.radii.md};
-  background: ${({ $checked }) => $checked ? 'rgba(79, 70, 229, 0.06)' : 'white'};
+  padding: 0.65rem 0.75rem;
+  background: ${({ $checked }) => $checked ? 'rgba(79,70,229,0.05)' : '#fff'};
+  border: 1.5px solid ${({ $checked, theme }) => $checked ? theme.colors.primary : theme.colors.surfaceHigh};
+  border-radius: ${({ theme }) => theme.radii.lg};
   cursor: pointer;
-  transition: all 0.15s;
-  position: relative;
+  transition: border-color 0.15s, background 0.15s;
 
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
-    background: rgba(79, 70, 229, 0.04);
+    background: rgba(79, 70, 229, 0.03);
   }
+
+  input { display: none; }
 `
 
-const AmenityCheckbox = styled.input`
-  position: absolute;
-  opacity: 0;
-  width: 0;
-  height: 0;
-`
-
-const AmenityIcon = styled.span`
-  font-size: 1.15rem;
+const AmenityIconBox = styled.div`
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
+  border-radius: 10px;
+  background: ${({ $checked, theme }) => $checked ? theme.colors.primary : theme.colors.surfaceLow};
+  color: ${({ $checked }) => $checked ? '#fff' : undefined};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+
+  .material-symbols-outlined { font-size: 1.15rem; }
 `
 
 const AmenityLabel = styled.span`
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: ${({ theme }) => theme.colors.onSurface};
   flex: 1;
 `
 
-const AmenityTick = styled.span`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.colors.primary};
-  font-weight: 700;
+const AmenityCheck = styled.span`
   margin-left: auto;
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 1.1rem;
+  opacity: ${({ $visible }) => $visible ? 1 : 0};
+  font-variation-settings: 'FILL' 1;
 `
 
 const RadioRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
 `
 
+const RadioCardGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
+const RadioCardItem = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  border: 2px solid ${({ $checked, theme }) => $checked ? theme.colors.primary : 'transparent'};
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  input { accent-color: ${({ theme }) => theme.colors.primary}; }
+  font-size: 0.9rem;
+  font-weight: 500;
+`
+
 const Textarea = styled.textarea`
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1.5px solid #e2e4e9;
-  border-radius: ${({ theme }) => theme.radii.md};
-  resize: vertical;
+  padding: 1.25rem;
+  background: ${({ theme }) => theme.colors.surfaceCard};
+  border: none;
+  border-radius: ${({ theme }) => theme.radii.xl};
+  resize: none;
   font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.onSurface};
-  background: ${({ theme }) => theme.colors.surfaceCard};
-  transition: border-color 0.15s;
   line-height: 1.6;
   font-family: inherit;
+  box-shadow: 0 2px 8px rgba(25,28,30,0.04);
+  transition: box-shadow 0.15s;
 
-  &:focus { outline: none; border-color: ${({ theme }) => theme.colors.primary}; }
+  &::placeholder { color: ${({ theme }) => theme.colors.muted}; }
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}33;
+  }
 `
 
 const CharCount = styled.span`
@@ -394,126 +733,248 @@ const CharCount = styled.span`
   margin-top: 0.35rem;
 `
 
-const Actions = styled.div`
+const Step3Actions = styled.div`
   display: flex;
-  gap: 0.75rem;
-  justify-content: ${({ $center }) => $center ? 'center' : 'flex-end'};
-  flex-wrap: ${({ $center }) => $center ? 'wrap' : 'nowrap'};
+  gap: 1rem;
   margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #f0f1f3;
 
-  @media (max-width: 640px) {
+  @media (max-width: 480px) {
     flex-direction: column-reverse;
   }
 `
 
-const ContinueBtn = styled(BtnAccent)`
-  min-width: 160px;
+const OutlineBtn = styled.button`
+  flex: 1;
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  background: transparent;
+  color: ${({ theme }) => theme.colors.primary};
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s;
 
-  @media (max-width: 640px) {
-    width: 100%;
-    min-width: unset;
-  }
+  &:hover { background: rgba(79, 70, 229, 0.05); }
 `
 
-const BackBtn = styled(BtnOutline)`
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
-
-  @media (max-width: 640px) {
-    width: 100%;
-    min-width: unset;
-  }
-`
-
-const SuccessCircle = styled.div`
-  width: 5rem;
-  height: 5rem;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.primary};
-  color: #fff;
-  font-size: 2.25rem;
+const SubmitBtn = styled.button`
+  flex: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3);
+
+  &:hover:not(:disabled) { opacity: 0.9; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
 `
 
-const StatusCard = styled.div`
-  background: ${({ theme }) => theme.colors.surfaceLow};
-  border-radius: ${({ theme }) => theme.radii.md};
-  padding: 1.25rem 1.5rem;
-  margin: 1.5rem auto;
-  max-width: 320px;
-  text-align: left;
+/* ─── Step 4: confirmation ─── */
+
+const SuccessWrap = styled.div`
+  padding: 3rem 2rem;
+  text-align: center;
 `
 
-const StatusRow = styled.div`
+const SuccessCircleWrap = styled.div`
+  position: relative;
+  display: inline-flex;
+  margin-bottom: 2rem;
+`
+
+const SuccessGlow = styled.div`
+  position: absolute;
+  inset: 0;
+  background: ${({ theme }) => theme.colors.primaryFixed};
+  opacity: 0.4;
+  border-radius: 50%;
+  filter: blur(32px);
+  transform: scale(2);
+`
+
+const SuccessCircle = styled.div`
+  position: relative;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.primaryFixed}, ${({ theme }) => theme.colors.primary});
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0.4rem 0;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(79,70,229,0.35);
 
-  & + & {
-    border-top: 1px solid #e9eaed;
-    margin-top: 0.4rem;
-    padding-top: 0.85rem;
+  .material-symbols-outlined {
+    font-size: 2.5rem;
+    color: #fff;
+    font-variation-settings: 'FILL' 1;
   }
 `
 
-const StatusLabel = styled.span`
-  font-size: 0.85rem;
+const SuccessTitle = styled.h2`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: ${({ theme }) => theme.colors.onSurface};
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+`
+
+const SuccessSub = styled.p`
   color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0 auto 2.5rem;
 `
 
-const StatusBadge = styled.span`
-  font-size: 0.8rem;
+const StatusGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  text-align: left;
+`
+
+const StatusTile = styled.div`
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border-radius: ${({ theme }) => theme.radii.lg};
+  padding: 1rem;
+`
+
+const StatusTileLabel = styled.p`
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #D97706;
-  background: #FEF3C7;
-  padding: 0.25rem 0.75rem;
-  border-radius: ${({ theme }) => theme.radii.full};
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.muted};
+  margin-bottom: 0.4rem;
 `
 
-const StatusValue = styled.span`
-  font-size: 0.85rem;
-  font-weight: 600;
+const StatusTileValue = styled.p`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: ${({ $primary, theme }) => $primary ? theme.colors.primary : theme.colors.onSurface};
+`
+
+const SuccessActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const ViewResBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: ${({ theme }) => theme.colors.primary};
+  color: #fff;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  box-shadow: 0 6px 16px rgba(79,70,229,0.3);
+
+  &:hover { opacity: 0.9; }
+`
+
+const ReviewAnotherBtn = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: ${({ theme }) => theme.radii.full};
+  border: none;
+  background: ${({ theme }) => theme.colors.accentLight};
+  color: ${({ theme }) => theme.colors.accentDark};
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #ffcfb5; }
+`
+
+const EngagementNudge = styled.div`
+  margin-top: 2rem;
+  background: rgba(226, 223, 255, 0.35);
+  backdrop-filter: blur(8px);
+  border: 1px solid ${({ theme }) => theme.colors.primaryFixed};
+  border-radius: ${({ theme }) => theme.radii.xl};
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+
+  .material-symbols-outlined {
+    font-size: 2rem;
+    color: ${({ theme }) => theme.colors.primary};
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
+  }
+`
+
+const NudgeTitle = styled.h4`
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.onSurface};
 `
 
-const LegendNote = styled.p`
-  margin-top: 1.5rem;
-  font-size: 0.82rem;
+const NudgeSub = styled.p`
+  font-size: 0.8rem;
   color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-top: 0.15rem;
 `
 
-/* ── StarRow Component ── */
+/* ─── StarRowComp ─── */
 function StarRowComp({ label, value, onChange }) {
   const [hovered, setHovered] = useState(0)
   return (
     <StarRow>
       <StarRowLabel>{label}</StarRowLabel>
-      <StarsRow>
+      <Stars>
         {[1, 2, 3, 4, 5].map(n => (
-          <StarBtn
+          <StarIcon
             key={n}
-            type="button"
+            className="material-symbols-outlined"
             $filled={n <= (hovered || value)}
             onMouseEnter={() => setHovered(n)}
             onMouseLeave={() => setHovered(0)}
             onClick={() => onChange(n)}
-            aria-label={`Rate ${n} star${n !== 1 ? 's' : ''}`}
+            role="button"
+            aria-label={`${n} star${n !== 1 ? 's' : ''}`}
           >
-            &#9733;
-          </StarBtn>
+            star
+          </StarIcon>
         ))}
-      </StarsRow>
+      </Stars>
     </StarRow>
   )
 }
 
+/* ─── Main component ─── */
 export default function WriteReview() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -535,6 +996,7 @@ export default function WriteReview() {
     roomQuality: 0,
     buildingSafety: 0,
     bathroom: 0,
+    cleanliness: 0,
     location: 0,
     roomType: '',
     cleaningFrequency: '',
@@ -547,7 +1009,7 @@ export default function WriteReview() {
 
   useEffect(() => {
     getUniversities()
-      .then(data => setUniversities(Array.isArray(data) ? data : (data.universities || [])))
+      .then(data => setUniversities(Array.isArray(data) ? data : (data.items || data.universities || [])))
       .catch(() => setUniversities([]))
       .finally(() => setLoadingUnis(false))
   }, [])
@@ -577,7 +1039,7 @@ export default function WriteReview() {
   function resetForm() {
     setFormData({
       universityId: '', residenceId: '', currentlyLiving: '', yearLived: '',
-      roomQuality: 0, buildingSafety: 0, bathroom: 0, location: 0,
+      roomQuality: 0, buildingSafety: 0, bathroom: 0, cleanliness: 0, location: 0,
       roomType: '', cleaningFrequency: '', wouldRecommend: null,
       amenities: [], kitchenType: '', bathroomType: '', comment: '',
     })
@@ -586,10 +1048,7 @@ export default function WriteReview() {
   }
 
   async function handleSubmit() {
-    if (!isAuthenticated) {
-      navigate('/signin')
-      return
-    }
+    if (!isAuthenticated) { navigate('/signin'); return }
     setSubmitting(true)
     try {
       await createReview(formData.residenceId, formData)
@@ -603,338 +1062,465 @@ export default function WriteReview() {
   }
 
   const step1Valid =
-    formData.universityId && formData.residenceId && formData.currentlyLiving && formData.yearLived
+    formData.universityId && formData.residenceId &&
+    formData.currentlyLiving && formData.yearLived
+
   const step2Valid =
-    formData.roomQuality > 0 &&
-    formData.buildingSafety > 0 &&
-    formData.bathroom > 0 &&
-    formData.location > 0 &&
-    formData.roomType &&
-    formData.cleaningFrequency &&
+    formData.roomQuality > 0 && formData.buildingSafety > 0 &&
+    formData.bathroom > 0 && formData.cleanliness > 0 && formData.location > 0 &&
+    formData.roomType && formData.cleaningFrequency &&
     formData.wouldRecommend !== null
+
+  const PROGRESS_PCT = { 1: 25, 2: 50, 3: 75, 4: 100 }
+  const STEP_TITLES = {
+    2: 'Detailed Ratings',
+    3: "What's included?",
+    4: 'Review Submitted',
+  }
 
   return (
     <Page>
       <Navbar />
 
-      {/* Hero / Step indicator */}
-      <Hero>
-        <Container>
-          <HeroTitle>Write a Review</HeroTitle>
-          <HeroSub>Share your honest experience to help future students</HeroSub>
-          <StepIndicator>
-            {STEPS.map((label, i) => {
-              const num = i + 1
-              const active = step === num
-              const done = step > num
-              return (
-                <StepPill key={num} $active={active} $done={done}>
-                  <StepNum $active={active} $done={done}>{done ? '✓' : num}</StepNum>
-                  <span>{label}</span>
-                </StepPill>
-              )
-            })}
-          </StepIndicator>
-        </Container>
-      </Hero>
-
-      {/* Card body */}
-      <Body>
-        <CardEl>
-
-          {/* STEP 1 — Select Residence */}
-          {step === 1 && (
-            <StepContent>
-              <StepTitle>Select your residence</StepTitle>
-              <StepSub>Tell us where you lived</StepSub>
-
-              <Field>
-                <Label>University</Label>
-                <Select
-                  value={formData.universityId}
-                  onChange={e => { set('universityId', e.target.value); set('residenceId', '') }}
-                  disabled={loadingUnis}
-                >
-                  <option value="">
-                    {loadingUnis ? 'Loading universities…' : 'Select a university'}
-                  </option>
-                  {universities.map(u => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </Select>
-              </Field>
-
-              <Field>
-                <Label>Residence</Label>
-                <Select
-                  value={formData.residenceId}
-                  onChange={e => set('residenceId', e.target.value)}
-                  disabled={!formData.universityId || loadingRes}
-                >
-                  <option value="">
-                    {!formData.universityId
-                      ? 'Select a university first'
-                      : loadingRes
-                      ? 'Loading residences…'
-                      : 'Select a residence'}
-                  </option>
-                  {residences.map(r => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </Select>
-              </Field>
-
-              <Field>
-                <Label>Are you currently living here?</Label>
-                <RadioGroup>
-                  {['Yes', 'No'].map(opt => (
-                    <RadioLabel key={opt}>
-                      <input
-                        type="radio"
-                        name="currentlyLiving"
-                        value={opt}
-                        checked={formData.currentlyLiving === opt}
-                        onChange={() => set('currentlyLiving', opt)}
-                      />
-                      {opt}
-                    </RadioLabel>
-                  ))}
-                </RadioGroup>
-              </Field>
-
-              <Field>
-                <Label>Year lived there</Label>
-                <Select
-                  value={formData.yearLived}
-                  onChange={e => set('yearLived', e.target.value)}
-                >
-                  <option value="">Select a year</option>
-                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                </Select>
-              </Field>
-
-              <AnonNote>&#128274; All information is kept anonymous</AnonNote>
-
-              <Actions>
-                <ContinueBtn
-                  onClick={() => setStep(2)}
-                  disabled={!step1Valid}
-                >
-                  Continue &#8594;
-                </ContinueBtn>
-              </Actions>
-            </StepContent>
-          )}
-
-          {/* STEP 2 — Ratings */}
-          {step === 2 && (
-            <StepContent>
-              <StepTitle>Rate your experience</StepTitle>
-              <StepSub>How was living there?</StepSub>
-
-              <RatingsBlock>
-                <StarRowComp label="Room Quality" value={formData.roomQuality} onChange={v => set('roomQuality', v)} />
-                <StarRowComp label="Building &amp; Safety" value={formData.buildingSafety} onChange={v => set('buildingSafety', v)} />
-                <StarRowComp label="Bathroom" value={formData.bathroom} onChange={v => set('bathroom', v)} />
-                <StarRowComp label="Location" value={formData.location} onChange={v => set('location', v)} />
-              </RatingsBlock>
-
-              <Field>
-                <Label>Room type</Label>
-                <ToggleGroup>
-                  {['Single', 'Double', 'Triple', 'Quad'].map(t => (
-                    <ToggleBtn
-                      key={t}
-                      type="button"
-                      $active={formData.roomType === t}
-                      onClick={() => set('roomType', t)}
-                    >
-                      {t}
-                    </ToggleBtn>
-                  ))}
-                </ToggleGroup>
-              </Field>
-
-              <Field>
-                <Label>Cleaning frequency</Label>
-                <ToggleGroup>
-                  {['Daily', 'Weekly', 'Fortnightly', 'Monthly'].map(f => (
-                    <ToggleBtn
-                      key={f}
-                      type="button"
-                      $active={formData.cleaningFrequency === f}
-                      onClick={() => set('cleaningFrequency', f)}
-                    >
-                      {f}
-                    </ToggleBtn>
-                  ))}
-                </ToggleGroup>
-              </Field>
-
-              <Field>
-                <Label>Would you recommend this residence?</Label>
-                <RecommendGroup>
-                  <RecommendBtn
-                    type="button"
-                    $yes={formData.wouldRecommend === true}
-                    onClick={() => set('wouldRecommend', true)}
-                  >
-                    &#128077; Yes, I would
-                  </RecommendBtn>
-                  <RecommendBtn
-                    type="button"
-                    $no={formData.wouldRecommend === false}
-                    onClick={() => set('wouldRecommend', false)}
-                  >
-                    &#128078; No, I wouldn't
-                  </RecommendBtn>
-                </RecommendGroup>
-              </Field>
-
-              <Actions>
-                <BackBtn onClick={() => setStep(1)}>&#8592; Back</BackBtn>
-                <ContinueBtn
-                  onClick={() => setStep(3)}
-                  disabled={!step2Valid}
-                >
-                  Continue &#8594;
-                </ContinueBtn>
-              </Actions>
-            </StepContent>
-          )}
-
-          {/* STEP 3 — Amenities & Comment */}
-          {step === 3 && (
-            <StepContent>
-              <StepTitle>What's included?</StepTitle>
-              <StepSub>Select all amenities available at this residence</StepSub>
-
-              <AmenityGrid>
-                {AMENITIES.map(({ key, label, icon }) => (
-                  <AmenityItem
-                    key={key}
-                    $checked={formData.amenities.includes(key)}
-                  >
-                    <AmenityCheckbox
-                      type="checkbox"
-                      checked={formData.amenities.includes(key)}
-                      onChange={() => toggleAmenity(key)}
-                    />
-                    <AmenityIcon>{icon}</AmenityIcon>
-                    <AmenityLabel>{label}</AmenityLabel>
-                    {formData.amenities.includes(key) && (
-                      <AmenityTick>&#10003;</AmenityTick>
-                    )}
-                  </AmenityItem>
+      {/* ── Step 1 hero ── */}
+      {step === 1 && (
+        <>
+          <Hero>
+            <HeroGlow />
+            <HeroInner>
+              <StepBadge>Step 1 of 4</StepBadge>
+              <HeroTitle>Select your residence</HeroTitle>
+              <HeroSub>Help other students by sharing your experience.</HeroSub>
+              <ProgressBars>
+                {STEPS.map((label, i) => (
+                  <ProgressSegment key={i}>
+                    <ProgressBar $done={i === 0} />
+                    <ProgressLabel $done={i === 0}>{label}</ProgressLabel>
+                  </ProgressSegment>
                 ))}
-              </AmenityGrid>
+              </ProgressBars>
+            </HeroInner>
+          </Hero>
 
-              <RadioRow>
-                <Field>
-                  <Label>Kitchen type</Label>
-                  <RadioGroup>
-                    {['Private', 'Communal'].map(opt => (
-                      <RadioLabel key={opt}>
-                        <input
-                          type="radio"
-                          name="kitchenType"
-                          value={opt}
-                          checked={formData.kitchenType === opt}
-                          onChange={() => set('kitchenType', opt)}
-                        />
-                        {opt}
-                      </RadioLabel>
-                    ))}
-                  </RadioGroup>
-                </Field>
-                <Field>
-                  <Label>Bathroom type</Label>
-                  <RadioGroup>
-                    {['En-suite', 'Communal'].map(opt => (
-                      <RadioLabel key={opt}>
-                        <input
-                          type="radio"
-                          name="bathroomType"
-                          value={opt}
-                          checked={formData.bathroomType === opt}
-                          onChange={() => set('bathroomType', opt)}
-                        />
-                        {opt}
-                      </RadioLabel>
-                    ))}
-                  </RadioGroup>
-                </Field>
-              </RadioRow>
+          <Body $heroOverlap>
+            <div style={{ width: '100%', maxWidth: 720 }}>
+              <CardEl>
+                <StepContent>
+                  <Field>
+                    <FieldLabel>Select your university</FieldLabel>
+                    <SelectWrap>
+                      <StyledSelect
+                        value={formData.universityId}
+                        onChange={e => { set('universityId', e.target.value); set('residenceId', '') }}
+                        disabled={loadingUnis}
+                      >
+                        <option value="">
+                          {loadingUnis ? 'Loading universities…' : 'Search for your institution...'}
+                        </option>
+                        {universities.map(u => (
+                          <option key={u.id} value={u.id}>{u.name}</option>
+                        ))}
+                      </StyledSelect>
+                      <SelectIcon className="material-symbols-outlined">expand_more</SelectIcon>
+                    </SelectWrap>
+                  </Field>
 
-              <Field>
-                <Label>
-                  Share your experience{' '}
-                  <Optional>(optional)</Optional>
-                </Label>
-                <Textarea
-                  placeholder="Tell future students what it's really like to live here…"
-                  value={formData.comment}
-                  onChange={e => {
-                    if (e.target.value.length <= 1000) set('comment', e.target.value)
-                  }}
-                  rows={5}
-                />
-                <CharCount $warn={formData.comment.length >= 900}>
-                  {formData.comment.length} / 1000
-                </CharCount>
-              </Field>
+                  <Field>
+                    <FieldLabel>Select your residence</FieldLabel>
+                    <SelectWrap>
+                      <StyledSelect
+                        value={formData.residenceId}
+                        onChange={e => set('residenceId', e.target.value)}
+                        disabled={!formData.universityId || loadingRes}
+                      >
+                        <option value="">
+                          {!formData.universityId
+                            ? 'Select a university first'
+                            : loadingRes
+                            ? 'Loading residences…'
+                            : 'Which residence did you live in?'}
+                        </option>
+                        {residences.map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </StyledSelect>
+                      <SelectIcon className="material-symbols-outlined">search</SelectIcon>
+                    </SelectWrap>
+                  </Field>
 
-              <Actions>
-                <BackBtn onClick={() => setStep(2)}>&#8592; Back</BackBtn>
-                <ContinueBtn
-                  onClick={handleSubmit}
-                  disabled={submitting}
-                >
-                  {submitting ? 'Submitting…' : 'Submit Review ✓'}
-                </ContinueBtn>
-              </Actions>
-            </StepContent>
-          )}
+                  <Field>
+                    <FieldLabel>Are you currently living here?</FieldLabel>
+                    <RadioCards>
+                      {[
+                        { val: 'Yes', label: 'Yes, I live here now' },
+                        { val: 'No', label: 'No, I previously lived here' },
+                      ].map(({ val, label }) => (
+                        <RadioCard key={val} $checked={formData.currentlyLiving === val}>
+                          <input
+                            type="radio"
+                            name="currentlyLiving"
+                            value={val}
+                            checked={formData.currentlyLiving === val}
+                            onChange={() => set('currentlyLiving', val)}
+                          />
+                          {label}
+                        </RadioCard>
+                      ))}
+                    </RadioCards>
+                  </Field>
 
-          {/* STEP 4 — Confirmation */}
-          {step === 4 && (
-            <StepContent $center>
-              <SuccessCircle>&#10003;</SuccessCircle>
-              <StepTitle>Review Submitted!</StepTitle>
-              <StepSub>
-                Your review is being verified and will appear shortly
-              </StepSub>
+                  <Field>
+                    <FieldLabel>Year you lived there</FieldLabel>
+                    <SelectWrap>
+                      <StyledSelect
+                        value={formData.yearLived}
+                        onChange={e => set('yearLived', e.target.value)}
+                      >
+                        <option value="">Select year...</option>
+                        {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                      </StyledSelect>
+                      <SelectIcon className="material-symbols-outlined">calendar_today</SelectIcon>
+                    </SelectWrap>
+                  </Field>
 
-              <StatusCard>
-                <StatusRow>
-                  <StatusLabel>Status</StatusLabel>
-                  <StatusBadge>&#9679; Pending Verification</StatusBadge>
-                </StatusRow>
-                <StatusRow>
-                  <StatusLabel>Est. time</StatusLabel>
-                  <StatusValue>~24 Hours</StatusValue>
-                </StatusRow>
-              </StatusCard>
+                  <ContinueBtn onClick={() => setStep(2)} disabled={!step1Valid}>
+                    Continue
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </ContinueBtn>
+                  <AnonNote>Step 1 of 4: All information is kept anonymous</AnonNote>
+                </StepContent>
+              </CardEl>
 
-              <Actions $center>
-                {submittedResidenceId && (
-                  <BtnLinkPrimary to={`/residence/${submittedResidenceId}`}>
-                    View Residence
-                  </BtnLinkPrimary>
-                )}
-                <BackBtn onClick={resetForm}>
-                  Review Another Residence
-                </BackBtn>
-              </Actions>
+              <InfoCards>
+                <InfoCard $primary>
+                  <InfoIconBox>
+                    <span className="material-symbols-outlined">verified</span>
+                  </InfoIconBox>
+                  <InfoText>
+                    <InfoTitle>Honest Feedback</InfoTitle>
+                    <InfoDesc>Your reviews help thousands of students make better living choices every year.</InfoDesc>
+                  </InfoText>
+                </InfoCard>
+                <InfoCard>
+                  <InfoIconBox>
+                    <span className="material-symbols-outlined">security</span>
+                  </InfoIconBox>
+                  <InfoText>
+                    <InfoTitle>Privacy First</InfoTitle>
+                    <InfoDesc>We never share your personal identity with residences.</InfoDesc>
+                  </InfoText>
+                </InfoCard>
+              </InfoCards>
+            </div>
+          </Body>
+        </>
+      )}
 
-              <LegendNote>
-                &#127942; Users with 5+ reviews earn the <strong>Campus Legend</strong> badge
-              </LegendNote>
-            </StepContent>
-          )}
+      {/* ── Step 2: purple hero (same layout as step 1) ── */}
+      {step === 2 && (
+        <>
+          <Hero>
+            <HeroGlow />
+            <HeroInner>
+              <StepBadge>Step 2 of 4</StepBadge>
+              <HeroTitle>Detailed Ratings</HeroTitle>
+              <HeroSub>Rate the key aspects of your stay.</HeroSub>
+              <ProgressBars>
+                {STEPS.map((label, i) => (
+                  <ProgressSegment key={i}>
+                    <ProgressBar $done={i <= 1} />
+                    <ProgressLabel $done={i <= 1}>{label}</ProgressLabel>
+                  </ProgressSegment>
+                ))}
+              </ProgressBars>
+            </HeroInner>
+          </Hero>
 
-        </CardEl>
-      </Body>
+          <Body $heroOverlap style={{ paddingBottom: '7rem' }}>
+            <div style={{ width: '100%', maxWidth: 720 }}>
+              <CardEl>
+                <StepContent>
+                  <RatingsCard>
+                    <SectionTitle>
+                      <span className="material-symbols-outlined">grade</span>
+                      Rate your experience
+                    </SectionTitle>
+                    <StarRowComp label="Room Quality" value={formData.roomQuality} onChange={v => set('roomQuality', v)} />
+                    <StarRowComp label="Building & Safety" value={formData.buildingSafety} onChange={v => set('buildingSafety', v)} />
+                    <StarRowComp label="Bathroom" value={formData.bathroom} onChange={v => set('bathroom', v)} />
+                    <StarRowComp label="Cleanliness" value={formData.cleanliness} onChange={v => set('cleanliness', v)} />
+                    <StarRowComp label="Location" value={formData.location} onChange={v => set('location', v)} />
+                  </RatingsCard>
+
+                  <SpecRow>
+                    <SpecCard>
+                      <SpecLabel>Room Type</SpecLabel>
+                      <PillGroup>
+                        {['Single', 'Double', 'Triple', 'Quad'].map(t => (
+                          <Pill key={t} type="button" $active={formData.roomType === t} onClick={() => set('roomType', t)}>
+                            {t}
+                          </Pill>
+                        ))}
+                      </PillGroup>
+                    </SpecCard>
+                    <SpecCard>
+                      <SpecLabel>Cleaning Frequency</SpecLabel>
+                      <PillGroup>
+                        {['Daily', 'Weekly', 'Fortnightly', 'Monthly'].map(f => (
+                          <Pill key={f} type="button" $active={formData.cleaningFrequency === f} onClick={() => set('cleaningFrequency', f)}>
+                            {f}
+                          </Pill>
+                        ))}
+                      </PillGroup>
+                    </SpecCard>
+                  </SpecRow>
+
+                  <RecommendSection>
+                    <RecommendText>
+                      <RecommendTitle>Would you recommend this place?</RecommendTitle>
+                      <RecommendSub>Your recommendation helps thousands of other students choose.</RecommendSub>
+                    </RecommendText>
+                    <RecommendToggle>
+                      <RecommendOpt
+                        type="button"
+                        $active={formData.wouldRecommend === false}
+                        onClick={() => set('wouldRecommend', false)}
+                      >
+                        No
+                      </RecommendOpt>
+                      <RecommendOpt
+                        type="button"
+                        $active={formData.wouldRecommend === true}
+                        onClick={() => set('wouldRecommend', true)}
+                      >
+                        Yes
+                      </RecommendOpt>
+                    </RecommendToggle>
+                  </RecommendSection>
+
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                    <OutlineBtn type="button" onClick={() => setStep(1)}>
+                      Back
+                    </OutlineBtn>
+                    <ContinueBtn onClick={() => setStep(3)} disabled={!step2Valid} style={{ flex: 2 }}>
+                      Continue
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </ContinueBtn>
+                  </div>
+                  <AnonNote>Step 2 of 4: All information is kept anonymous</AnonNote>
+                </StepContent>
+
+              </CardEl>
+            </div>
+          </Body>
+        </>
+      )}
+
+      {/* ── Step 3: purple hero (same layout as steps 1 & 2) ── */}
+      {step === 3 && (
+        <>
+          <Hero>
+            <HeroGlow />
+            <HeroInner>
+              <StepBadge>Step 3 of 4</StepBadge>
+              <HeroTitle>What's included?</HeroTitle>
+              <HeroSub>Tell us about the amenities and facilities at your residence.</HeroSub>
+              <ProgressBars>
+                {STEPS.map((label, i) => (
+                  <ProgressSegment key={i}>
+                    <ProgressBar $done={i <= 2} />
+                    <ProgressLabel $done={i <= 2}>{label}</ProgressLabel>
+                  </ProgressSegment>
+                ))}
+              </ProgressBars>
+            </HeroInner>
+          </Hero>
+
+          <Body $heroOverlap>
+            <div style={{ width: '100%', maxWidth: 720 }}>
+              <CardEl>
+                <StepContent>
+                  <SectionTitle style={{ marginBottom: '0.5rem' }}>Available Amenities</SectionTitle>
+                  <p style={{ color: '#6b7280', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                    Help other students understand the facilities available at this residence.
+                  </p>
+
+                  <AmenityGrid>
+                    {AMENITIES.map(({ key, label, icon }) => {
+                      const checked = formData.amenities.includes(key)
+                      return (
+                        <AmenityItem key={key} $checked={checked}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleAmenity(key)}
+                          />
+                          <AmenityIconBox $checked={checked}>
+                            <span className="material-symbols-outlined">{icon}</span>
+                          </AmenityIconBox>
+                          <AmenityLabel>{label}</AmenityLabel>
+                          <AmenityCheck className="material-symbols-outlined" $visible={checked}>
+                            check_circle
+                          </AmenityCheck>
+                        </AmenityItem>
+                      )
+                    })}
+                  </AmenityGrid>
+
+                  <RadioRow>
+                    <div>
+                      <SectionTitle style={{ fontSize: '1rem', marginBottom: '1rem' }}>Kitchen Type</SectionTitle>
+                      <RadioCardGroup>
+                        {[
+                          { val: 'Private', label: 'Private Kitchen' },
+                          { val: 'Communal', label: 'Communal Kitchen' },
+                        ].map(({ val, label }) => (
+                          <RadioCardItem key={val} $checked={formData.kitchenType === val}>
+                            <input
+                              type="radio"
+                              name="kitchenType"
+                              value={val}
+                              checked={formData.kitchenType === val}
+                              onChange={() => set('kitchenType', val)}
+                            />
+                            {label}
+                          </RadioCardItem>
+                        ))}
+                      </RadioCardGroup>
+                    </div>
+                    <div>
+                      <SectionTitle style={{ fontSize: '1rem', marginBottom: '1rem' }}>Bathroom</SectionTitle>
+                      <RadioCardGroup>
+                        {[
+                          { val: 'En-suite', label: 'En-suite (Private)' },
+                          { val: 'Communal', label: 'Communal / Shared' },
+                        ].map(({ val, label }) => (
+                          <RadioCardItem key={val} $checked={formData.bathroomType === val}>
+                            <input
+                              type="radio"
+                              name="bathroomType"
+                              value={val}
+                              checked={formData.bathroomType === val}
+                              onChange={() => set('bathroomType', val)}
+                            />
+                            {label}
+                          </RadioCardItem>
+                        ))}
+                      </RadioCardGroup>
+                    </div>
+                  </RadioRow>
+
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                      <SectionTitle style={{ marginBottom: 0 }}>Share your experience</SectionTitle>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6b7280' }}>Optional</span>
+                    </div>
+                    <div style={{ position: 'relative' }}>
+                      <Textarea
+                        placeholder="Tell us about the atmosphere, the management, and anything else future residents should know..."
+                        value={formData.comment}
+                        onChange={e => {
+                          if (e.target.value.length <= 1000) set('comment', e.target.value)
+                        }}
+                        rows={6}
+                      />
+                      <CharCount $warn={formData.comment.length >= 900}>
+                        {formData.comment.length} / 1000
+                      </CharCount>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                    <OutlineBtn type="button" onClick={() => setStep(2)} style={{ padding: '0.7rem 1.25rem' }}>Back</OutlineBtn>
+                    <ContinueBtn
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={submitting}
+                      style={{ flex: 2, padding: '0.7rem 1.25rem' }}
+                    >
+                      {submitting ? 'Submitting…' : 'Submit Review'}
+                      {!submitting && <span className="material-symbols-outlined">send</span>}
+                    </ContinueBtn>
+                  </div>
+                  <AnonNote>Step 3 of 4: All information is kept anonymous</AnonNote>
+                </StepContent>
+              </CardEl>
+            </div>
+          </Body>
+        </>
+      )}
+
+      {/* ── Step 4: confirmation ── */}
+      {step === 4 && (
+        <>
+          <Hero>
+            <HeroGlow />
+            <HeroInner>
+              <StepBadge>Step 4 of 4</StepBadge>
+              <HeroTitle>Review Submitted!</HeroTitle>
+              <HeroSub>Thank you for helping fellow students make better decisions.</HeroSub>
+              <ProgressBars>
+                {STEPS.map((label, i) => (
+                  <ProgressSegment key={i}>
+                    <ProgressBar $done={true} />
+                    <ProgressLabel $done={true}>{label}</ProgressLabel>
+                  </ProgressSegment>
+                ))}
+              </ProgressBars>
+            </HeroInner>
+          </Hero>
+
+          <Body $heroOverlap style={{ paddingBottom: '5rem' }}>
+            <div style={{ width: '100%', maxWidth: 720 }}>
+            <CardEl>
+              <SuccessWrap>
+                  <SuccessCircleWrap>
+                    <SuccessGlow />
+                    <SuccessCircle>
+                      <span className="material-symbols-outlined">check_circle</span>
+                    </SuccessCircle>
+                  </SuccessCircleWrap>
+
+                  <SuccessTitle>Review Submitted!</SuccessTitle>
+                  <SuccessSub>Your review is being verified and will appear shortly</SuccessSub>
+
+                  <StatusGrid>
+                    <StatusTile>
+                      <StatusTileLabel>Status</StatusTileLabel>
+                      <StatusTileValue $primary>Pending Verification</StatusTileValue>
+                    </StatusTile>
+                    <StatusTile>
+                      <StatusTileLabel>Estimated Time</StatusTileLabel>
+                      <StatusTileValue>~24 Hours</StatusTileValue>
+                    </StatusTile>
+                  </StatusGrid>
+
+                  <SuccessActions>
+                    {submittedResidenceId ? (
+                      <ViewResBtn onClick={() => navigate(`/residence/${submittedResidenceId}`)}>
+                        View Residence
+                        <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>visibility</span>
+                      </ViewResBtn>
+                    ) : null}
+                    <ReviewAnotherBtn onClick={resetForm}>
+                      Review Another Residence
+                      <span className="material-symbols-outlined" style={{ fontSize: '1rem' }}>add_reaction</span>
+                    </ReviewAnotherBtn>
+                  </SuccessActions>
+
+                  <EngagementNudge>
+                    <span className="material-symbols-outlined">emoji_events</span>
+                    <div>
+                      <NudgeTitle>Help more students!</NudgeTitle>
+                      <NudgeSub>Users with 5+ reviews get the "Campus Legend" badge.</NudgeSub>
+                    </div>
+                  </EngagementNudge>
+              </SuccessWrap>
+            </CardEl>
+            </div>
+          </Body>
+        </>
+      )}
 
       <Footer />
     </Page>

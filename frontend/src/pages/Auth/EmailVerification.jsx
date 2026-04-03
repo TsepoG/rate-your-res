@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { verifyEmail, resendCode } from '../../services/auth'
-import { ApiError, SubmitBtn } from './SignUp'
 
 const CODE_LENGTH = 6
 const RESEND_SECONDS = 45
@@ -12,6 +11,38 @@ const VerifyPage = styled.div`
   background: ${({ theme }) => theme.colors.surface};
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
+`
+
+const VerifyGlow = styled.div`
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 380px;
+  height: 380px;
+  background: ${({ theme }) => theme.colors.primary};
+  opacity: 0.03;
+  filter: blur(100px);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+`
+
+const VerifyGlowBottom = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 380px;
+  height: 380px;
+  background: ${({ theme }) => theme.colors.tertiaryBadge};
+  opacity: 0.03;
+  filter: blur(100px);
+  border-radius: 50%;
+  transform: translate(-50%, 50%);
+  pointer-events: none;
+  z-index: 0;
 `
 
 const VerifyNav = styled.header`
@@ -19,8 +50,9 @@ const VerifyNav = styled.header`
   display: flex;
   align-items: center;
   padding: 0 1.5rem;
-  background: ${({ theme }) => theme.colors.surfaceCard};
-  border-bottom: 1px solid #eaecf0;
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  position: relative;
+  z-index: 1;
 `
 
 const VerifyNavLogo = styled(Link)`
@@ -32,21 +64,24 @@ const VerifyNavLogo = styled(Link)`
   text-decoration: none;
 `
 
-const VerifyBody = styled.div`
+const VerifyBody = styled.main`
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 3rem 1rem 4rem;
+  position: relative;
+  z-index: 1;
 `
 
 const VerifyCard = styled.div`
   background: ${({ theme }) => theme.colors.surfaceCard};
-  border-radius: ${({ theme }) => theme.radii.lg};
-  box-shadow: ${({ theme }) => theme.shadows.float};
-  padding: 2.75rem 2.5rem 2.25rem;
+  border-radius: ${({ theme }) => theme.radii.xl};
+  box-shadow: 0 20px 40px rgba(25, 28, 30, 0.06);
+  padding: 3rem 2.5rem;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   text-align: center;
 
   @media (max-width: 768px) {
@@ -58,45 +93,45 @@ const VerifyIconCircle = styled.div`
   width: 5rem;
   height: 5rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, ${({ theme }) => theme.colors.primaryDark}, ${({ theme }) => theme.colors.primary});
-  color: #fff;
-  font-size: 2.1rem;
+  background: ${({ theme }) => theme.colors.primaryFixed};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+  margin: 0 auto 2rem;
+
+  .material-symbols-outlined {
+    font-size: 2.25rem;
+    color: ${({ theme }) => theme.colors.primary};
+    font-variation-settings: 'FILL' 1;
+  }
 `
 
 const VerifyTitle = styled.h1`
   font-family: ${({ theme }) => theme.fonts.display};
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: ${({ theme }) => theme.colors.onSurface};
   letter-spacing: -0.02em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 `
 
 const VerifySub = styled.p`
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  margin-bottom: 1.75rem;
+  margin-bottom: 2.5rem;
   line-height: 1.6;
 `
 
-const VerifyEmail = styled.strong`
-  color: ${({ theme }) => theme.colors.onSurface};
+const VerifyEmail = styled.span`
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
 `
 
 const OtpRow = styled.div`
-  display: flex;
-  gap: 0.6rem;
-  justify-content: center;
-  margin-bottom: 1.75rem;
-
-  @media (max-width: 768px) {
-    gap: 0.45rem;
-  }
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
 
   @media (max-width: 420px) {
     gap: 0.35rem;
@@ -104,87 +139,132 @@ const OtpRow = styled.div`
 `
 
 const OtpInput = styled.input`
-  width: 3rem;
-  height: 3.5rem;
-  border: 2px solid ${({ $filled, theme }) => $filled ? theme.colors.primary : '#e2e4e9'};
+  width: 100%;
+  height: 56px;
+  border: none;
   border-radius: ${({ theme }) => theme.radii.md};
   text-align: center;
   font-size: 1.35rem;
   font-weight: 700;
   color: ${({ theme }) => theme.colors.onSurface};
-  background: ${({ $filled }) => $filled ? 'rgba(79, 70, 229, 0.04)' : '#f7f9fb'};
-  transition: border-color 0.15s, background 0.15s;
+  background: ${({ theme }) => theme.colors.surfaceHigh};
+  transition: background 0.15s, box-shadow 0.15s;
   caret-color: ${({ theme }) => theme.colors.primary};
   font-family: inherit;
 
+  &::placeholder { color: ${({ theme }) => theme.colors.outlineVariant}; }
+
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
-    background: #fff;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    background: ${({ theme }) => theme.colors.surfaceCard};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}40;
   }
 
   @media (max-width: 768px) {
-    width: 2.6rem;
-    height: 3.1rem;
+    height: 48px;
     font-size: 1.2rem;
-  }
-
-  @media (max-width: 420px) {
-    width: 2.2rem;
-    height: 2.8rem;
-    font-size: 1.1rem;
   }
 `
 
-const ResendRow = styled.div`
+const VerifyBtn = styled.button`
+  width: 100%;
+  padding: 1rem;
+  background: ${({ theme }) => theme.colors.accent};
+  color: #fff;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: ${({ theme }) => theme.radii.full};
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  margin-bottom: 2rem;
+
+  &:hover:not(:disabled) { background: #ea580c; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+`
+
+const ApiError = styled.div`
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
   margin-bottom: 1.25rem;
+  text-align: left;
+`
+
+const ResendRow = styled.p`
+  font-size: 0.875rem;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-bottom: 1rem;
+  font-weight: 500;
 `
 
 const ResendCountdown = styled.span`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  color: ${({ theme }) => theme.colors.muted};
 `
 
 const ResendLink = styled.button`
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.primary};
   background: none;
   border: none;
   cursor: pointer;
-  text-decoration: underline;
   font-family: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `
 
 const ChangeEmail = styled(Link)`
   display: block;
-  font-size: 0.82rem;
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.colors.primary};
   text-decoration: none;
-  margin-bottom: 1.25rem;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
 
-  &:hover { color: ${({ theme }) => theme.colors.primary}; }
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
 `
 
-const VerifyNote = styled.p`
-  font-size: 0.78rem;
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  padding-top: 1rem;
-  border-top: 1px solid #f0f1f3;
-  line-height: 1.5;
+const VerifyNote = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  text-align: left;
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid ${({ theme }) => theme.colors.surfaceLow};
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border-radius: ${({ theme }) => theme.radii.md};
+  padding: 1rem;
+  margin-top: 2rem;
+
+  .material-symbols-outlined {
+    color: ${({ theme }) => theme.colors.primary};
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  p {
+    font-size: 0.78rem;
+    color: ${({ theme }) => theme.colors.onSurfaceMuted};
+    line-height: 1.6;
+  }
 `
 
 const FaqSection = styled.div`
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   margin-top: 1.25rem;
-  background: ${({ theme }) => theme.colors.surfaceCard};
-  border-radius: ${({ theme }) => theme.radii.lg};
-  box-shadow: ${({ theme }) => theme.shadows.card};
+  background: ${({ theme }) => theme.colors.surfaceLow};
+  border-radius: ${({ theme }) => theme.radii.xl};
   overflow: hidden;
 `
 
@@ -193,40 +273,51 @@ const FaqToggle = styled.button`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-size: 0.95rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.onSurface};
   text-align: left;
-  font-family: inherit;
+  transition: background 0.15s;
 
-  &:hover { background: ${({ theme }) => theme.colors.surfaceLow}; }
-`
+  &:hover { background: ${({ theme }) => theme.colors.surfaceHigh}; }
 
-const FaqIcon = styled.span`
-  color: ${({ theme }) => theme.colors.onSurfaceMuted};
-  font-size: 1rem;
+  .material-symbols-outlined {
+    transition: transform 0.3s;
+    transform: ${({ $open }) => $open ? 'rotate(180deg)' : 'rotate(0deg)'};
+    color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  }
 `
 
 const FaqBody = styled.div`
-  padding: 0 1.5rem 1.25rem;
+  padding: 0 1.5rem 1.5rem;
 
   p {
     font-size: 0.875rem;
     color: ${({ theme }) => theme.colors.onSurfaceMuted};
     line-height: 1.7;
+    margin-bottom: 1rem;
   }
+`
 
-  code {
-    font-family: monospace;
-    background: ${({ theme }) => theme.colors.surfaceLow};
-    padding: 0.1em 0.4em;
-    border-radius: 4px;
-    font-size: 0.85em;
+const FaqCheck = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  margin-bottom: 0.5rem;
+
+  .material-symbols-outlined {
+    font-size: 1rem;
     color: ${({ theme }) => theme.colors.primary};
+    font-variation-settings: 'FILL' 1;
+    flex-shrink: 0;
   }
 `
 
@@ -320,13 +411,18 @@ export default function EmailVerification() {
 
   return (
     <VerifyPage>
+      <VerifyGlow />
+      <VerifyGlowBottom />
+
       <VerifyNav>
         <VerifyNavLogo to="/">RateYourRes</VerifyNavLogo>
       </VerifyNav>
 
       <VerifyBody>
         <VerifyCard>
-          <VerifyIconCircle>&#128231;</VerifyIconCircle>
+          <VerifyIconCircle>
+            <span className="material-symbols-outlined">mark_email_unread</span>
+          </VerifyIconCircle>
 
           <VerifyTitle>Verify your student email</VerifyTitle>
           <VerifySub>
@@ -345,7 +441,7 @@ export default function EmailVerification() {
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
-                  $filled={!!digit}
+                  placeholder="•"
                   value={digit}
                   onChange={e => handleCodeChange(i, e.target.value)}
                   onKeyDown={e => handleCodeKeyDown(i, e)}
@@ -355,34 +451,34 @@ export default function EmailVerification() {
               ))}
             </OtpRow>
 
-            <SubmitBtn type="submit" disabled={loading}>
+            <VerifyBtn type="submit" disabled={loading}>
               {loading ? 'Verifying…' : 'Verify Email'}
-            </SubmitBtn>
+            </VerifyBtn>
           </form>
 
-          <ResendRow>
+          <div style={{ marginBottom: '1rem' }}>
             {countdown > 0 ? (
-              <ResendCountdown>
-                Didn't receive the code? Resend in{' '}
-                <strong>{countdownStr}</strong>
-              </ResendCountdown>
+              <ResendRow>
+                Didn't receive the code?{' '}
+                <ResendCountdown>Resend in <strong>{countdownStr}</strong></ResendCountdown>
+              </ResendRow>
             ) : (
-              <ResendLink
-                type="button"
-                onClick={handleResend}
-                disabled={resending}
-              >
-                {resending ? 'Sending…' : 'Resend now'}
-              </ResendLink>
+              <ResendRow>
+                Didn't receive the code?{' '}
+                <ResendLink type="button" onClick={handleResend} disabled={resending}>
+                  {resending ? 'Sending…' : 'Resend now'}
+                </ResendLink>
+              </ResendRow>
             )}
-          </ResendRow>
+          </div>
 
-          <ChangeEmail to="/signup">
-            &#8592; Change email address
-          </ChangeEmail>
+          <ChangeEmail to="/signup">Change email address</ChangeEmail>
 
           <VerifyNote>
-            &#127979; We only accept official university student email addresses
+            <span className="material-symbols-outlined">info</span>
+            <p>
+              We only accept official university student email addresses to ensure reviews come from real students.
+            </p>
           </VerifyNote>
         </VerifyCard>
 
@@ -390,20 +486,28 @@ export default function EmailVerification() {
         <FaqSection>
           <FaqToggle
             type="button"
+            $open={faqOpen}
             onClick={() => setFaqOpen(o => !o)}
             aria-expanded={faqOpen}
           >
             Why do we verify?
-            <FaqIcon>{faqOpen ? '∧' : '∨'}</FaqIcon>
+            <span className="material-symbols-outlined">expand_more</span>
           </FaqToggle>
           {faqOpen && (
             <FaqBody>
               <p>
-                We verify your student email to ensure all reviews come from real
-                South African university students. This keeps our platform trustworthy
-                and prevents fake reviews. Only <code>.ac.za</code> email addresses are
-                accepted.
+                To maintain the integrity of RateYourRes, we require all reviewers to verify their university affiliation. This prevents fake reviews, bot spam, and ensures the feedback comes from actual residents.
               </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <FaqCheck>
+                  <span className="material-symbols-outlined">check_circle</span>
+                  Verified community of real students
+                </FaqCheck>
+                <FaqCheck>
+                  <span className="material-symbols-outlined">check_circle</span>
+                  High-quality, reliable residential data
+                </FaqCheck>
+              </ul>
             </FaqBody>
           )}
         </FaqSection>

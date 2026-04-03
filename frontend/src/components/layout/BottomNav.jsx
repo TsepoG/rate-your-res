@@ -52,7 +52,7 @@ const NAV_ITEMS = [
   { to: '/', icon: 'home', label: 'Home' },
   { to: '/browse', icon: 'explore', label: 'Browse' },
   { to: '/review', icon: 'rate_review', label: 'Reviews' },
-  { to: '/signin', icon: 'person', label: 'Profile' },
+  { to: '/profile', icon: 'person', label: 'Profile' },
 ]
 
 export default function BottomNav() {

@@ -127,7 +127,7 @@ resource "aws_apigatewayv2_route" "signin" {
 resource "aws_lambda_permission" "universities" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arns.universities
+  function_name = var.lambda_function_arns.universities
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
@@ -135,7 +135,7 @@ resource "aws_lambda_permission" "universities" {
 resource "aws_lambda_permission" "residences" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arns.residences
+  function_name = var.lambda_function_arns.residences
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
@@ -143,7 +143,7 @@ resource "aws_lambda_permission" "residences" {
 resource "aws_lambda_permission" "reviews" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arns.reviews
+  function_name = var.lambda_function_arns.reviews
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
@@ -151,7 +151,7 @@ resource "aws_lambda_permission" "reviews" {
 resource "aws_lambda_permission" "auth" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_arns.auth
+  function_name = var.lambda_function_arns.auth
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }
