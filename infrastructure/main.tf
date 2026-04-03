@@ -49,8 +49,9 @@ module "lambda" {
 }
 
 module "api_gateway" {
-  source       = "./modules/api-gateway"
-  environment  = var.environment
-  app_name     = var.app_name
-  lambda_arns  = module.lambda.invoke_arns
+  source               = "./modules/api-gateway"
+  environment          = var.environment
+  app_name             = var.app_name
+  lambda_arns          = module.lambda.invoke_arns
+  lambda_function_arns = module.lambda.function_arns
 }

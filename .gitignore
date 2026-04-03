@@ -12,6 +12,8 @@ build/
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
 
 # AWS credentials & secrets
 *.pem
@@ -28,6 +30,10 @@ infrastructure/terraform.tfvars
 # Lambda build artifacts
 backend/dist/
 backend/*.zip
+infrastructure/modules/lambda/zips/
+
+# Scripts (local use only)
+scripts/
 
 # IDE
 .vscode/

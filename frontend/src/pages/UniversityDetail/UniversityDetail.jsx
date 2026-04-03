@@ -79,12 +79,13 @@ const Breadcrumb = styled.nav`
   gap: 8px;
   font-size: 0.8rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.85);
   letter-spacing: 0.03em;
   margin-bottom: 24px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 
-  a { color: rgba(255, 255, 255, 0.7); text-decoration: none; &:hover { color: #fff; } }
-  span { opacity: 0.5; }
+  a { color: rgba(255, 255, 255, 0.85); text-decoration: none; text-shadow: 0 1px 4px rgba(0,0,0,0.5); &:hover { color: #fff; } }
+  span { opacity: 0.6; }
 `
 
 const HeroBody = styled.div`

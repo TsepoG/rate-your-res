@@ -51,6 +51,31 @@ const Main = styled.main`
   padding-bottom: 8rem;
 `
 
+const BackBar = styled.div`
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 0;
+`
+
+const BackBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: ${({ theme }) => theme.fonts.display};
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.colors.onSurfaceMuted};
+  padding: 0.4rem 0;
+  transition: color 0.15s;
+
+  &:hover { color: ${({ theme }) => theme.colors.primary}; }
+  .material-symbols-outlined { font-size: 1.1rem; }
+`
+
 /* Gallery */
 const GallerySection = styled.section`
   margin-top: 16px;
@@ -833,6 +858,12 @@ export default function ResidenceDetail() {
   return (
     <Page>
       <Navbar />
+      <BackBar>
+        <BackBtn onClick={() => navigate(-1)}>
+          <span className="material-symbols-outlined">arrow_back</span>
+          Back
+        </BackBtn>
+      </BackBar>
       <Main>
 
         {/* ── Image Gallery ── */}
