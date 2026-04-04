@@ -1,31 +1,39 @@
 variable "environment" {
-  type = string
+  description = "Deployment environment"
+  type        = string
 }
 
 variable "app_name" {
-  type = string
+  description = "Application name"
+  type        = string
 }
 
 variable "aws_region" {
-  type = string
+  description = "AWS region where resources are deployed"
+  type        = string
 }
 
 variable "universities_table" {
-  type = string
+  description = "DynamoDB table name for universities"
+  type        = string
 }
 
 variable "residences_table" {
-  type = string
+  description = "DynamoDB table name for residences"
+  type        = string
 }
 
 variable "reviews_table" {
-  type = string
+  description = "DynamoDB table name for reviews"
+  type        = string
 }
 
 variable "cognito_client_id" {
-  type = string
+  description = "Cognito user pool client ID"
+  type        = string
 }
 
 variable "cognito_user_pool_arn" {
-  type = string
+  description = "Cognito user pool ARN used to scope IAM permissions"
+  type        = string
 }
