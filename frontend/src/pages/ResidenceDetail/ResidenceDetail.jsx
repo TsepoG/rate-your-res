@@ -6,7 +6,8 @@ import Footer from '../../components/layout/Footer'
 import { getResidence } from '../../services/residences'
 import { getReviews } from '../../services/reviews'
 import { useAuth } from '../../context/AuthContext'
-import { LoadingState, EmptyState, BtnLinkPrimary } from '../../styles/shared'
+import { EmptyState, BtnLinkPrimary } from '../../styles/shared'
+import { SkeletonBlock } from '../../components/ui/Skeleton'
 
 /* ─── Data ─── */
 
@@ -754,6 +755,75 @@ function ReviewCard({ review, uniAbbr }) {
   )
 }
 
+/* ─── Skeleton ─── */
+
+function ResidenceDetailSkeleton() {
+  return (
+    <Page>
+      <Navbar />
+
+      <Main>
+        {/* Back button placeholder */}
+        <BackBar>
+          <SkeletonBlock $w="80px" $h="14px" $radius="6px" />
+        </BackBar>
+
+        {/* Gallery skeleton — large block + two side panels on desktop */}
+        <GallerySection>
+          <GalleryGrid>
+            <SkeletonBlock $h="100%" $radius="0" />
+            <SideImages>
+              <SkeletonBlock $h="100%" $radius="0" />
+              <SkeletonBlock $h="100%" $radius="0" />
+            </SideImages>
+          </GalleryGrid>
+        </GallerySection>
+
+        {/* Info section skeleton — left content + right rating card */}
+        <InfoSection>
+          <InfoLeft>
+            {/* Badges row */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+              <SkeletonBlock $w="80px" $h="22px" $radius="999px" />
+              <SkeletonBlock $w="120px" $h="22px" $radius="999px" />
+            </div>
+            {/* Title */}
+            <SkeletonBlock $w="70%" $h="36px" style={{ marginBottom: 8 }} />
+            <SkeletonBlock $w="45%" $h="18px" style={{ marginBottom: 32 }} />
+            {/* Description lines */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <SkeletonBlock $w="100%" $h="14px" />
+              <SkeletonBlock $w="95%" $h="14px" />
+              <SkeletonBlock $w="80%" $h="14px" />
+            </div>
+            {/* Amenities block */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 40 }}>
+              {[1,2,3,4,5,6].map(i => (
+                <SkeletonBlock key={i} $w="100px" $h="36px" $radius="8px" />
+              ))}
+            </div>
+          </InfoLeft>
+
+          {/* Right: rating card — minWidth:0 prevents grid column overflow */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+            <SkeletonBlock $w="80px" $h="48px" style={{ marginBottom: 4 }} />
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <SkeletonBlock $w="90px" $h="12px" style={{ flexShrink: 0 }} />
+                <SkeletonBlock $w="auto" $h="8px" $radius="999px" style={{ flex: 1, minWidth: 0 }} />
+                <SkeletonBlock $w="28px" $h="12px" style={{ flexShrink: 0 }} />
+              </div>
+            ))}
+            <SkeletonBlock $h="48px" $radius="12px" style={{ marginTop: 16 }} />
+          </div>
+        </InfoSection>
+      </Main>
+
+      <Footer />
+    </Page>
+  )
+}
+
 /* ─── Page ─── */
 export default function ResidenceDetail() {
   const { residenceId } = useParams()
@@ -820,7 +890,7 @@ export default function ResidenceDetail() {
     finally { setLoadingMore(false) }
   }
 
-  if (loadingPage) return <Page><Navbar /><LoadingState>Loading residence...</LoadingState><Footer /></Page>
+  if (loadingPage) return <ResidenceDetailSkeleton />
 
   if (error) return (
     <Page>

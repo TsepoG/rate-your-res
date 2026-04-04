@@ -7,6 +7,13 @@
 
 import http from 'http'
 
+const SLOW_MODE = process.argv.includes('--slow')
+const SLOW_DELAY = 10_000 // ms
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 const UNIVERSITIES = [
@@ -899,6 +906,8 @@ const server = http.createServer(async (req, res) => {
     })
     return res.end()
   }
+
+  if (SLOW_MODE) await sleep(SLOW_DELAY)
 
   console.log(`${method} ${req.url}`)
 
