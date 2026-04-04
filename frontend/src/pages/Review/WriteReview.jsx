@@ -5,7 +5,6 @@ import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { getUniversities, getUniversityResidences } from '../../services/universities'
 import { createReview } from '../../services/reviews'
-import { useAuth } from '../../context/AuthContext'
 import { Container, BtnLinkPrimary } from '../../styles/shared'
 
 const AMENITIES = [
@@ -978,7 +977,6 @@ function StarRowComp({ label, value, onChange }) {
 export default function WriteReview() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { isAuthenticated } = useAuth()
 
   const [step, setStep] = useState(1)
   const [universities, setUniversities] = useState([])
@@ -1048,7 +1046,6 @@ export default function WriteReview() {
   }
 
   async function handleSubmit() {
-    if (!isAuthenticated) { navigate('/signin'); return }
     setSubmitting(true)
     try {
       await createReview(formData.residenceId, formData)

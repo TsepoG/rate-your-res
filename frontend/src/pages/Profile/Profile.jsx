@@ -436,28 +436,22 @@ const UNI_NAMES = {
 /* ─── Component ─── */
 
 export default function Profile() {
-  const { user, logout, isAuthenticated, loading } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [reviews, setReviews] = useState([])
   const [notificationsOn, setNotificationsOn] = useState(true)
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) navigate('/signin')
-  }, [loading, isAuthenticated])
-
-  useEffect(() => {
-    if (!isAuthenticated) return
     getUserReviews()
       .then(data => setReviews(Array.isArray(data) ? data : (data.reviews || data.items || [])))
       .catch(() => setReviews([]))
-  }, [isAuthenticated])
+  }, [])
 
   function handleSignOut() {
     logout()
     navigate('/')
   }
 
-  if (loading) return null
 
   const email = user?.email || ''
   const uniId = user?.universityId || ''
