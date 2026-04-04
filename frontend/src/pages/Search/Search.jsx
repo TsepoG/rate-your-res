@@ -4,7 +4,8 @@ import styled from 'styled-components'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { searchResidences } from '../../services/residences'
-import { Container, LoadingState } from '../../styles/shared'
+import { Container } from '../../styles/shared'
+import { SkeletonBlock } from '../../components/ui/Skeleton'
 
 const PROVINCES = [
   'Gauteng', 'Western Cape', 'KwaZulu-Natal', 'Eastern Cape',
@@ -689,6 +690,39 @@ const Ellipsis = styled.span`
   padding: 0 0.25rem;
 `
 
+/* ── Skeleton ── */
+
+function SearchResultsSkeleton() {
+  return (
+    <>
+      {[1, 2, 3, 4].map(i => (
+        <ResultCard key={i} style={{ cursor: 'default' }}>
+          <CardThumb>
+            <SkeletonBlock $h="100%" $radius="0" />
+          </CardThumb>
+          <CardBody>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <SkeletonBlock $w="55%" $h="18px" />
+                <SkeletonBlock $w="48px" $h="28px" $radius="8px" />
+              </div>
+              <SkeletonBlock $w="38%" $h="13px" />
+              <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                <SkeletonBlock $w="56px" $h="12px" />
+                <SkeletonBlock $w="56px" $h="12px" />
+                <SkeletonBlock $w="56px" $h="12px" />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+              <SkeletonBlock $w="90px" $h="36px" $radius="999px" />
+            </div>
+          </CardBody>
+        </ResultCard>
+      ))}
+    </>
+  )
+}
+
 /* ── Component ── */
 
 export default function Search() {
@@ -933,7 +967,7 @@ export default function Search() {
             </Sidebar>
 
             <Results>
-              {loading && <LoadingState>Searching residences…</LoadingState>}
+              {loading && <SearchResultsSkeleton />}
 
               {!loading && query && results.length === 0 && (
                 <EmptyCard>

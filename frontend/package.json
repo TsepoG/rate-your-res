@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "mock": "node mock-server.js",
+    "mock:slow": "node mock-server.js --slow",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

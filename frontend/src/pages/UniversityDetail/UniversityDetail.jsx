@@ -4,7 +4,8 @@ import styled from 'styled-components'
 import Navbar from '../../components/layout/Navbar'
 import Footer from '../../components/layout/Footer'
 import { getUniversity, getUniversityResidences } from '../../services/universities'
-import { Container, LoadingState, EmptyState, BtnLinkPrimary } from '../../styles/shared'
+import { Container, EmptyState, BtnLinkPrimary } from '../../styles/shared'
+import { SkeletonBlock, SkeletonCircle } from '../../components/ui/Skeleton'
 
 const SORT_OPTIONS = [
   { value: 'top_rated', label: 'Recommended' },
@@ -562,6 +563,94 @@ function ResidenceCard({ residence }) {
   )
 }
 
+/* ── Skeleton ── */
+
+const SkeletonCardImg = styled.div`
+  height: 224px;
+  overflow: hidden;
+`
+
+const SkeletonCardBody = styled.div`
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+function ResidenceCardSkeleton() {
+  return (
+    <Card style={{ cursor: 'default' }}>
+      <SkeletonCardImg>
+        <SkeletonBlock $h="100%" $radius="0" />
+      </SkeletonCardImg>
+      <SkeletonCardBody>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <SkeletonBlock $w="55%" $h="18px" />
+          <SkeletonBlock $w="48px" $h="28px" $radius="8px" />
+        </div>
+        <SkeletonBlock $w="35%" $h="12px" />
+        <div style={{ display: 'flex', gap: 16 }}>
+          <SkeletonBlock $w="60px" $h="12px" />
+          <SkeletonBlock $w="60px" $h="12px" />
+          <SkeletonBlock $w="60px" $h="12px" />
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 16, borderTop: '1px solid rgba(199,196,216,0.1)' }}>
+          <SkeletonBlock $w="80px" $h="12px" />
+          <SkeletonBlock $w="100px" $h="36px" $radius="999px" />
+        </div>
+      </SkeletonCardBody>
+    </Card>
+  )
+}
+
+function UniversityDetailSkeleton() {
+  return (
+    <Page>
+      <Navbar />
+      <Hero>
+        <HeroContent>
+          <SkeletonBlock $dark $w="180px" $h="12px" style={{ marginBottom: 24 }} />
+          <HeroBody>
+            <SkeletonCircle $dark $size="96px" />
+            <HeroText>
+              <SkeletonBlock $dark $w="65%" $h="36px" style={{ marginBottom: 10 }} />
+              <SkeletonBlock $dark $w="42%" $h="16px" style={{ marginBottom: 24 }} />
+              <StatChips>
+                {[1, 2, 3].map(i => (
+                  <SkeletonBlock key={i} $dark $w="100px" $h="60px" $radius="12px" />
+                ))}
+              </StatChips>
+            </HeroText>
+          </HeroBody>
+        </HeroContent>
+      </Hero>
+
+      <TabsOuter>
+        <TabsInner style={{ gap: 32 }}>
+          {[100, 120, 90].map((w, i) => (
+            <SkeletonBlock key={i} $w={`${w}px`} $h="14px" style={{ margin: '18px 0' }} />
+          ))}
+        </TabsInner>
+      </TabsOuter>
+
+      <ContentArea>
+        <FilterRow style={{ marginBottom: 48 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SkeletonBlock $w="200px" $h="24px" />
+            <SkeletonBlock $w="300px" $h="14px" />
+          </div>
+          <SkeletonBlock $w="120px" $h="38px" $radius="12px" />
+        </FilterRow>
+        <Grid>
+          {[1, 2, 3].map(i => <ResidenceCardSkeleton key={i} />)}
+        </Grid>
+      </ContentArea>
+
+      <Footer />
+    </Page>
+  )
+}
+
 /* ── Page component ── */
 
 export default function UniversityDetail() {
@@ -605,9 +694,7 @@ export default function UniversityDetail() {
     ? residences
     : residences.filter(r => r.campus === selectedCampus)
 
-  if (loading) return (
-    <Page><Navbar /><LoadingState>Loading university...</LoadingState><Footer /></Page>
-  )
+  if (loading) return <UniversityDetailSkeleton />
 
   if (error) return (
     <Page>
