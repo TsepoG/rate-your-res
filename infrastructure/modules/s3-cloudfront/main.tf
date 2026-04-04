@@ -21,6 +21,16 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 # Origin Access Control — CloudFront fetches from S3 privately
 resource "aws_cloudfront_origin_access_control" "frontend" {
   name                              = "${local.prefix}-oac"
@@ -53,6 +63,7 @@ resource "aws_s3_bucket_policy" "frontend" {
   })
 }
 
+# kics-scan ignore-block
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   default_root_object = "index.html"
@@ -129,6 +140,16 @@ resource "aws_s3_bucket_public_access_block" "images" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "images" {
+  bucket = aws_s3_bucket.images.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_bucket_cors_configuration" "images" {

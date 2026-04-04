@@ -1,9 +1,11 @@
 variable "environment" {
-  type = string
+  description = "Deployment environment"
+  type        = string
 }
 
 variable "app_name" {
-  type = string
+  description = "Application name"
+  type        = string
 }
 
 variable "lambda_arns" {

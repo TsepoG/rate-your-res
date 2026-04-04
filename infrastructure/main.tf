@@ -45,6 +45,7 @@ module "lambda" {
   residences_table     = module.dynamodb.residences_table_name
   reviews_table        = module.dynamodb.reviews_table_name
   cognito_client_id    = module.cognito.client_id
+  cognito_user_pool_arn = module.cognito.user_pool_arn
   aws_region           = var.aws_region
 }
 

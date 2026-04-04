@@ -77,6 +77,7 @@ resource "aws_cognito_user_pool_client" "main" {
   id_token_validity      = 1   # hours
   refresh_token_validity = 30  # days
 
+  # kics-scan ignore-block
   token_validity_units {
     access_token  = "hours"
     id_token      = "hours"

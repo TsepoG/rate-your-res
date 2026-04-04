@@ -66,7 +66,7 @@ resource "aws_iam_role_policy" "lambda_cognito" {
         "cognito-idp:ResendConfirmationCode",
         "cognito-idp:AdminGetUser",
       ]
-      Resource = "*"
+      Resource = var.cognito_user_pool_arn
     }]
   })
 }

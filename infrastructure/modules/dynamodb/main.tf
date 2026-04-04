@@ -38,6 +38,10 @@ resource "aws_dynamodb_table" "universities" {
     projection_type = "ALL"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = {
     Environment = var.environment
     Project     = "rateyourres"
@@ -80,6 +84,10 @@ resource "aws_dynamodb_table" "residences" {
     projection_type = "ALL"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = {
     Environment = var.environment
     Project     = "rateyourres"
@@ -116,6 +124,10 @@ resource "aws_dynamodb_table" "reviews" {
     projection_type = "ALL"
   }
 
+  server_side_encryption {
+    enabled = true
+  }
+
   tags = {
     Environment = var.environment
     Project     = "rateyourres"
@@ -132,6 +144,10 @@ resource "aws_dynamodb_table" "users" {
   attribute {
     name = "userId"
     type = "S"
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   tags = {
