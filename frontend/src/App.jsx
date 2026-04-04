@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import BottomNav from './components/layout/BottomNav'
+import ProtectedRoute from './components/ui/ProtectedRoute'
+import ScrollToTop from './components/ui/ScrollToTop'
 
 // Pages — to be implemented
 import Home from './pages/Home/Home'
@@ -20,6 +22,7 @@ export default function App() {
   return (
     <AuthProvider>
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/browse" element={<Browse />} />
@@ -28,11 +31,13 @@ export default function App() {
         <Route path="/university/:universityId" element={<UniversityDetail />} />
         <Route path="/residence/:residenceId" element={<ResidenceDetail />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/review" element={<WriteReview />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/verify-email" element={<EmailVerification />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/review" element={<WriteReview />} />
+          <Route path="/profile" element={<Profile />} />
+        </Route>
       </Routes>
       <BottomNav />
     </BrowserRouter>

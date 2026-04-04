@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { signIn } from '../../services/auth'
 import { useAuth } from '../../context/AuthContext'
 import {
@@ -11,6 +11,7 @@ import {
 
 export default function SignIn() {
   const navigate = useNavigate()
+  const { state } = useLocation()
   const { login } = useAuth()
 
   const [form, setForm] = useState({ email: '', password: '' })
@@ -41,7 +42,7 @@ export default function SignIn() {
     try {
       const tokens = await signIn({ email: form.email, password: form.password })
       login(tokens)
-      navigate('/')
+      navigate(state?.from || '/')
     } catch (err) {
       setApiError(err?.response?.data?.message || 'Incorrect email or password.')
     } finally {
