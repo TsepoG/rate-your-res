@@ -764,6 +764,15 @@ const REVIEWS = {
     { reviewId: 'r1', residenceId: 'ukzn-ansell-may', rating: 5, comment: 'Absolutely loved living here. The community is welcoming, facilities are well maintained, and the location on Howard College campus is unbeatable.', category: 'general', createdAt: '2024-08-15T10:00:00Z', anonymous: true },
     { reviewId: 'r2', residenceId: 'ukzn-ansell-may', rating: 4, comment: 'WiFi can be slow during peak hours but overall a great place to stay. The security is top notch.', category: 'wifi', createdAt: '2024-07-20T14:30:00Z', anonymous: true },
     { reviewId: 'r3', residenceId: 'ukzn-ansell-may', rating: 5, comment: 'Best decision I made was to stay here in first year. Made lifelong friends.', category: 'community', createdAt: '2024-06-10T09:00:00Z', anonymous: true },
+    { reviewId: 'r-am4', residenceId: 'ukzn-ansell-may', rating: 4, comment: 'The laundry facilities are always clean and available. No complaints there.', category: 'amenities', createdAt: '2024-05-18T08:00:00Z', anonymous: true },
+    { reviewId: 'r-am5', residenceId: 'ukzn-ansell-may', rating: 3, comment: 'Rooms are a decent size but the hot water can be temperamental in winter.', category: 'general', createdAt: '2024-04-22T11:30:00Z', anonymous: true },
+    { reviewId: 'r-am6', residenceId: 'ukzn-ansell-may', rating: 5, comment: 'Management is very responsive. Any issue I raised was sorted within a day.', category: 'general', createdAt: '2024-03-14T09:00:00Z', anonymous: true },
+    { reviewId: 'r-am7', residenceId: 'ukzn-ansell-may', rating: 4, comment: 'Great study environment. Most students are serious about their academics here.', category: 'general', createdAt: '2024-02-28T15:00:00Z', anonymous: true },
+    { reviewId: 'r-am8', residenceId: 'ukzn-ansell-may', rating: 3, comment: 'Noise levels on weekends can be a lot. Earplugs recommended during res events.', category: 'general', createdAt: '2024-02-10T19:00:00Z', anonymous: true },
+    { reviewId: 'r-am9', residenceId: 'ukzn-ansell-may', rating: 5, comment: 'The dining hall is consistently good and the menu changes weekly. Really impressive.', category: 'food', createdAt: '2024-01-30T12:00:00Z', anonymous: true },
+    { reviewId: 'r-am10', residenceId: 'ukzn-ansell-may', rating: 4, comment: 'Parking is limited but the campus is walkable so it is not a big issue.', category: 'general', createdAt: '2024-01-15T10:00:00Z', anonymous: true },
+    { reviewId: 'r-am11', residenceId: 'ukzn-ansell-may', rating: 4, comment: 'Safety has improved a lot this year. The new access gates make a real difference.', category: 'safety', createdAt: '2023-12-05T14:00:00Z', anonymous: true },
+    { reviewId: 'r-am12', residenceId: 'ukzn-ansell-may', rating: 5, comment: 'Hands down the best first-year residence at UKZN Howard. Would choose it again.', category: 'general', createdAt: '2023-11-20T09:00:00Z', anonymous: true },
   ],
   'ukzn-village': [
     { reviewId: 'r4', residenceId: 'ukzn-village', rating: 4, comment: 'The shuttle service is convenient but the gym equipment needs upgrading. Pool is a great bonus.', category: 'amenities', createdAt: '2024-09-01T11:00:00Z', anonymous: true },
@@ -1050,15 +1059,20 @@ const server = http.createServer(async (req, res) => {
   // ── GET /residences/:id/reviews ──
   const reviewsMatch = urlPath.match(/^\/residences\/([^/]+)\/reviews$/)
   if (method === 'GET' && reviewsMatch) {
-    const reviews = REVIEWS[reviewsMatch[1]] || []
-    const page = parseInt(query.page) || 1
-    const limit = parseInt(query.limit) || 10
-    const start = (page - 1) * limit
+    const all = REVIEWS[reviewsMatch[1]] || []
+    const limit = Math.min(parseInt(query.limit) || 10, 50)
+    const startIndex = query.lastKey
+      ? parseInt(Buffer.from(query.lastKey, 'base64').toString(), 10)
+      : 0
+    const slice = all.slice(startIndex, startIndex + limit)
+    const nextStart = startIndex + limit
+    const nextKey = nextStart < all.length
+      ? Buffer.from(String(nextStart)).toString('base64')
+      : null
     return jsonResponse(res, 200, {
-      items: reviews.slice(start, start + limit),
-      total: reviews.length,
-      page,
-      totalPages: Math.ceil(reviews.length / limit),
+      reviews: slice,
+      count: slice.length,
+      nextKey,
     })
   }
 
@@ -1126,7 +1140,7 @@ server.listen(PORT, () => {
   console.log('  GET  /universities/:id/residences?sort=')
   console.log('  GET  /residences/:id')
   console.log('  GET  /residences/search?q=&province=&universityIds=&minRating=&amenities=&roomType=&onCampus=&sort=&page=&limit=')
-  console.log('  GET  /residences/:id/reviews?page=&limit=')
+  console.log('  GET  /residences/:id/reviews?limit=&lastKey=')
   console.log('  POST /residences/:id/reviews')
   console.log('  POST /auth/signup | /auth/verify | /auth/resend | /auth/signin\n')
 })
