@@ -8,12 +8,13 @@ terraform {
     }
   }
 
-  # Remote state — configure before first apply
-  # backend "s3" {
-  #   bucket = "rateyourres-terraform-state"
-  #   key    = "terraform.tfstate"
-  #   region = "af-south-1"
-  # }
+  backend "s3" {
+    bucket         = "rateyourres-terraform-state"
+    key            = "dev/terraform.tfstate"
+    region         = "af-south-1"
+    dynamodb_table = "rateyourres-terraform-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {

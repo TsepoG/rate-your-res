@@ -10,6 +10,32 @@ on:
         required: true
 
 jobs:
+  deploy-infrastructure:
+    name: Apply Terraform
+    runs-on: ubuntu-latest
+    environment: dev
+    defaults:
+      run:
+        working-directory: infrastructure
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: af-south-1
+
+      - run: terraform init
+
+      - run: terraform apply -auto-approve
+
   deploy-frontend:
     name: Build & deploy frontend
     runs-on: ubuntu-latest
@@ -59,6 +85,7 @@ jobs:
     name: Deploy Lambda functions
     runs-on: ubuntu-latest
     environment: dev
+    needs: deploy-infrastructure
 
     steps:
       - uses: actions/checkout@v4
@@ -85,9 +112,18 @@ jobs:
 
       - name: Update Lambda functions
         run: |
-          for fn in universities residences reviews auth; do
+          FUNCTIONS=$(aws lambda list-functions \
+            --no-paginate \
+            --query "Functions[?starts_with(FunctionName, 'rateyourres-dev-')].FunctionName" \
+            --output text \
+            --region af-south-1)
+
+          for fn in $FUNCTIONS; do
+            echo "Updating $fn..."
             aws lambda update-function-code \
-              --function-name rateyourres-dev-$fn \
+              --function-name "$fn" \
               --zip-file fileb://backend.zip \
-              --region af-south-1
+              --region af-south-1 \
+              --query "FunctionName" \
+              --output text
           done
