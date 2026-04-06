@@ -80,6 +80,38 @@ data "archive_file" "backend" {
   output_path = "${path.module}/zips/backend.zip"
 }
 
+# --- CloudWatch Log Groups ---
+
+resource "aws_cloudwatch_log_group" "universities" {
+  name              = "/aws/lambda/${local.prefix}-universities"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+resource "aws_cloudwatch_log_group" "residences" {
+  name              = "/aws/lambda/${local.prefix}-residences"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+resource "aws_cloudwatch_log_group" "reviews" {
+  name              = "/aws/lambda/${local.prefix}-reviews"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+resource "aws_cloudwatch_log_group" "profile" {
+  name              = "/aws/lambda/${local.prefix}-profile"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+resource "aws_cloudwatch_log_group" "auth" {
+  name              = "/aws/lambda/${local.prefix}-auth"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
 # --- Lambda functions ---
 # DLQ not applicable to any function below: all are synchronously invoked by API
 # Gateway. DLQs only capture failed async invocations; sync callers receive errors
@@ -104,6 +136,7 @@ resource "aws_lambda_function" "universities" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.universities]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
@@ -125,6 +158,7 @@ resource "aws_lambda_function" "residences" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.residences]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
@@ -147,6 +181,7 @@ resource "aws_lambda_function" "reviews" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.reviews]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
@@ -168,6 +203,7 @@ resource "aws_lambda_function" "profile" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.profile]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
@@ -189,5 +225,6 @@ resource "aws_lambda_function" "auth" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.auth]
   tags = { Environment = var.environment, Project = var.app_name }
 }
