@@ -1,4 +1,4 @@
-const { ok, created, badRequest, unauthorized, serverError } = require('../../shared/utils/response')
+const { ok, created, badRequest, unauthorized, notFound, serverError } = require('../../shared/utils/response')
 const { dynamo } = require('../../shared/utils/dynamo')
 const { QueryCommand, PutCommand, UpdateCommand } = require('@aws-sdk/lib-dynamodb')
 const { randomUUID } = require('crypto')
