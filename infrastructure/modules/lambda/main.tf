@@ -81,31 +81,39 @@ data "archive_file" "backend" {
 }
 
 # --- CloudWatch Log Groups ---
+# KMS key encryption not used: CloudWatch Logs are already encrypted at rest by
+# default with AWS-managed keys. Customer-managed KMS keys cost $1/month per key
+# and are not justified for a free-tier project.
 
+# kics-scan ignore-block
 resource "aws_cloudwatch_log_group" "universities" {
   name              = "/aws/lambda/${local.prefix}-universities"
   retention_in_days = 14
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_cloudwatch_log_group" "residences" {
   name              = "/aws/lambda/${local.prefix}-residences"
   retention_in_days = 14
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_cloudwatch_log_group" "reviews" {
   name              = "/aws/lambda/${local.prefix}-reviews"
   retention_in_days = 14
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_cloudwatch_log_group" "profile" {
   name              = "/aws/lambda/${local.prefix}-profile"
   retention_in_days = 14
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_cloudwatch_log_group" "auth" {
   name              = "/aws/lambda/${local.prefix}-auth"
   retention_in_days = 14
