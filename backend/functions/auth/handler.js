@@ -1,4 +1,4 @@
-const { ok, created, badRequest, unauthorized, serverError } = require('../../shared/utils/response')
+const { ok, created, badRequest, unauthorized, notFound, serverError } = require('../../shared/utils/response')
 const {
   CognitoIdentityProviderClient,
   SignUpCommand,
@@ -137,4 +137,40 @@ async function signIn(event) {
   }
 }
 
-module.exports = { signUp, verifyEmail, resendCode, signIn }
+async function refreshToken(event) {
+  try {
+    const { refreshToken: token } = JSON.parse(event.body || '{}')
+    if (!token) return badRequest('refreshToken is required')
+
+    const result = await cognito.send(new InitiateAuthCommand({
+      ClientId: CLIENT_ID,
+      AuthFlow: 'REFRESH_TOKEN_AUTH',
+      AuthParameters: { REFRESH_TOKEN: token },
+    }))
+
+    const tokens = result.AuthenticationResult
+    return ok({
+      accessToken: tokens.AccessToken,
+      idToken: tokens.IdToken,
+      expiresIn: tokens.ExpiresIn,
+    })
+  } catch (err) {
+    if (err.name === 'NotAuthorizedException') {
+      return unauthorized('Refresh token is invalid or has expired')
+    }
+    console.error('refreshToken error:', err)
+    return serverError()
+  }
+}
+
+module.exports = { signUp, verifyEmail, resendCode, signIn, refreshToken }
+
+module.exports.handler = async (event) => {
+  const { routeKey } = event
+  if (routeKey === 'POST /auth/signup')   return signUp(event)
+  if (routeKey === 'POST /auth/verify')   return verifyEmail(event)
+  if (routeKey === 'POST /auth/resend')   return resendCode(event)
+  if (routeKey === 'POST /auth/signin')   return signIn(event)
+  if (routeKey === 'POST /auth/refresh')  return refreshToken(event)
+  return notFound('Route not found')
+}

@@ -8,12 +8,13 @@ terraform {
     }
   }
 
-  # Remote state — configure before first apply
-  # backend "s3" {
-  #   bucket = "rateyourres-terraform-state"
-  #   key    = "terraform.tfstate"
-  #   region = "af-south-1"
-  # }
+  backend "s3" {
+    bucket         = "rateyourres-terraform-state"
+    key            = "dev/terraform.tfstate"
+    region         = "af-south-1"
+    dynamodb_table = "rateyourres-terraform-locks"
+    encrypt        = true
+  }
 }
 
 provider "aws" {
@@ -55,4 +56,7 @@ module "api_gateway" {
   app_name             = var.app_name
   lambda_arns          = module.lambda.invoke_arns
   lambda_function_arns = module.lambda.function_arns
+  cognito_user_pool_id = module.cognito.user_pool_id
+  cognito_client_id    = module.cognito.client_id
+  aws_region           = var.aws_region
 }

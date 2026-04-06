@@ -88,3 +88,11 @@ async function listResidences(event) {
 }
 
 module.exports = { listUniversities, getUniversity, listResidences }
+
+module.exports.handler = async (event) => {
+  const { routeKey } = event
+  if (routeKey === 'GET /universities')                    return listUniversities(event)
+  if (routeKey === 'GET /universities/{id}')               return getUniversity(event)
+  if (routeKey === 'GET /universities/{id}/residences')    return listResidences(event)
+  return notFound('Route not found')
+}

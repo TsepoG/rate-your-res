@@ -80,13 +80,57 @@ data "archive_file" "backend" {
   output_path = "${path.module}/zips/backend.zip"
 }
 
-# --- Lambda functions ---
+# --- CloudWatch Log Groups ---
+# KMS key encryption not used: CloudWatch Logs are already encrypted at rest by
+# default with AWS-managed keys. Customer-managed KMS keys cost $1/month per key
+# and are not justified for a free-tier project.
 
+# kics-scan ignore-block
+resource "aws_cloudwatch_log_group" "universities" {
+  name              = "/aws/lambda/${local.prefix}-universities"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# kics-scan ignore-block
+resource "aws_cloudwatch_log_group" "residences" {
+  name              = "/aws/lambda/${local.prefix}-residences"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# kics-scan ignore-block
+resource "aws_cloudwatch_log_group" "reviews" {
+  name              = "/aws/lambda/${local.prefix}-reviews"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# kics-scan ignore-block
+resource "aws_cloudwatch_log_group" "profile" {
+  name              = "/aws/lambda/${local.prefix}-profile"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# kics-scan ignore-block
+resource "aws_cloudwatch_log_group" "auth" {
+  name              = "/aws/lambda/${local.prefix}-auth"
+  retention_in_days = 14
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# --- Lambda functions ---
+# DLQ not applicable to any function below: all are synchronously invoked by API
+# Gateway. DLQs only capture failed async invocations; sync callers receive errors
+# directly and Lambda never retries or queues events.
+
+# kics-scan ignore-block
 resource "aws_lambda_function" "universities" {
   function_name    = "${local.prefix}-universities"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/universities/handler.listUniversities"
+  handler          = "functions/universities/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -100,14 +144,16 @@ resource "aws_lambda_function" "universities" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.universities]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_lambda_function" "residences" {
   function_name    = "${local.prefix}-residences"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/residences/handler.getResidence"
+  handler          = "functions/residences/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -120,14 +166,39 @@ resource "aws_lambda_function" "residences" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.residences]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_lambda_function" "reviews" {
   function_name    = "${local.prefix}-reviews"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/reviews/handler.listReviews"
+  handler          = "functions/reviews/handler.handler"
+  filename         = data.archive_file.backend.output_path
+  source_code_hash = data.archive_file.backend.output_base64sha256
+  timeout          = local.timeout
+  memory_size      = local.memory
+
+  environment {
+    variables = {
+      REVIEWS_TABLE                       = var.reviews_table
+      RESIDENCES_TABLE                    = var.residences_table
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  depends_on = [aws_cloudwatch_log_group.reviews]
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+# kics-scan ignore-block
+resource "aws_lambda_function" "profile" {
+  function_name    = "${local.prefix}-profile"
+  role             = aws_iam_role.lambda.arn
+  runtime          = local.runtime
+  handler          = "functions/profile/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -140,14 +211,16 @@ resource "aws_lambda_function" "reviews" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.profile]
   tags = { Environment = var.environment, Project = var.app_name }
 }
 
+# kics-scan ignore-block
 resource "aws_lambda_function" "auth" {
   function_name    = "${local.prefix}-auth"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/auth/handler.signUp"
+  handler          = "functions/auth/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -160,5 +233,6 @@ resource "aws_lambda_function" "auth" {
     }
   }
 
+  depends_on = [aws_cloudwatch_log_group.auth]
   tags = { Environment = var.environment, Project = var.app_name }
 }

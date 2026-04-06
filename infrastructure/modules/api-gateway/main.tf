@@ -20,6 +20,20 @@ resource "aws_apigatewayv2_stage" "default" {
   auto_deploy = true
 }
 
+# --- Cognito JWT Authorizer ---
+
+resource "aws_apigatewayv2_authorizer" "cognito" {
+  api_id           = aws_apigatewayv2_api.main.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "${local.prefix}-cognito-authorizer"
+
+  jwt_configuration {
+    audience = [var.cognito_client_id]
+    issuer   = "https://cognito-idp.${var.aws_region}.amazonaws.com/${var.cognito_user_pool_id}"
+  }
+}
+
 # --- Lambda integrations ---
 
 resource "aws_apigatewayv2_integration" "universities" {
@@ -47,6 +61,13 @@ resource "aws_apigatewayv2_integration" "auth" {
   api_id                 = aws_apigatewayv2_api.main.id
   integration_type       = "AWS_PROXY"
   integration_uri        = var.lambda_arns.auth
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_integration" "profile" {
+  api_id                 = aws_apigatewayv2_api.main.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = var.lambda_arns.profile
   payload_format_version = "2.0"
 }
 
@@ -92,9 +113,11 @@ resource "aws_apigatewayv2_route" "list_reviews" {
 }
 
 resource "aws_apigatewayv2_route" "create_review" {
-  api_id    = aws_apigatewayv2_api.main.id
-  route_key = "POST /residences/{id}/reviews"
-  target    = "integrations/${aws_apigatewayv2_integration.reviews.id}"
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "POST /residences/{id}/reviews"
+  target             = "integrations/${aws_apigatewayv2_integration.reviews.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
 # Auth
@@ -120,6 +143,21 @@ resource "aws_apigatewayv2_route" "signin" {
   api_id    = aws_apigatewayv2_api.main.id
   route_key = "POST /auth/signin"
   target    = "integrations/${aws_apigatewayv2_integration.auth.id}"
+}
+
+resource "aws_apigatewayv2_route" "refresh" {
+  api_id    = aws_apigatewayv2_api.main.id
+  route_key = "POST /auth/refresh"
+  target    = "integrations/${aws_apigatewayv2_integration.auth.id}"
+}
+
+# Profile
+resource "aws_apigatewayv2_route" "get_user_reviews" {
+  api_id             = aws_apigatewayv2_api.main.id
+  route_key          = "GET /users/me/reviews"
+  target             = "integrations/${aws_apigatewayv2_integration.profile.id}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.cognito.id
 }
 
 # --- Lambda permissions for API Gateway ---
@@ -152,6 +190,14 @@ resource "aws_lambda_permission" "auth" {
   statement_id  = "AllowAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_function_arns.auth
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "profile" {
+  statement_id  = "AllowAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_function_arns.profile
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.main.execution_arn}/*/*"
 }

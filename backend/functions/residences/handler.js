@@ -109,3 +109,10 @@ async function searchResidences(event) {
 }
 
 module.exports = { getResidence, searchResidences }
+
+module.exports.handler = async (event) => {
+  const { routeKey } = event
+  if (routeKey === 'GET /residences/{id}')     return getResidence(event)
+  if (routeKey === 'GET /residences/search')   return searchResidences(event)
+  return notFound('Route not found')
+}
