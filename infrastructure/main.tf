@@ -55,4 +55,7 @@ module "api_gateway" {
   app_name             = var.app_name
   lambda_arns          = module.lambda.invoke_arns
   lambda_function_arns = module.lambda.function_arns
+  cognito_user_pool_id = module.cognito.user_pool_id
+  cognito_client_id    = module.cognito.client_id
+  aws_region           = var.aws_region
 }

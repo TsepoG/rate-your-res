@@ -131,3 +131,10 @@ async function createReview(event) {
 }
 
 module.exports = { listReviews, createReview }
+
+module.exports.handler = async (event) => {
+  const { routeKey } = event
+  if (routeKey === 'GET /residences/{id}/reviews')    return listReviews(event)
+  if (routeKey === 'POST /residences/{id}/reviews')   return createReview(event)
+  return notFound('Route not found')
+}

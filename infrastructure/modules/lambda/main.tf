@@ -86,7 +86,7 @@ resource "aws_lambda_function" "universities" {
   function_name    = "${local.prefix}-universities"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/universities/handler.listUniversities"
+  handler          = "functions/universities/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -107,7 +107,7 @@ resource "aws_lambda_function" "residences" {
   function_name    = "${local.prefix}-residences"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/residences/handler.getResidence"
+  handler          = "functions/residences/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -127,7 +127,28 @@ resource "aws_lambda_function" "reviews" {
   function_name    = "${local.prefix}-reviews"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/reviews/handler.listReviews"
+  handler          = "functions/reviews/handler.handler"
+  filename         = data.archive_file.backend.output_path
+  source_code_hash = data.archive_file.backend.output_base64sha256
+  timeout          = local.timeout
+  memory_size      = local.memory
+
+  environment {
+    variables = {
+      REVIEWS_TABLE                       = var.reviews_table
+      RESIDENCES_TABLE                    = var.residences_table
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = { Environment = var.environment, Project = var.app_name }
+}
+
+resource "aws_lambda_function" "profile" {
+  function_name    = "${local.prefix}-profile"
+  role             = aws_iam_role.lambda.arn
+  runtime          = local.runtime
+  handler          = "functions/profile/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout
@@ -147,7 +168,7 @@ resource "aws_lambda_function" "auth" {
   function_name    = "${local.prefix}-auth"
   role             = aws_iam_role.lambda.arn
   runtime          = local.runtime
-  handler          = "functions/auth/handler.signUp"
+  handler          = "functions/auth/handler.handler"
   filename         = data.archive_file.backend.output_path
   source_code_hash = data.archive_file.backend.output_base64sha256
   timeout          = local.timeout

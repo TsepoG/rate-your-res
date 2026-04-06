@@ -117,10 +117,22 @@ resource "aws_dynamodb_table" "reviews" {
     type = "S"
   }
 
+  attribute {
+    name = "userId"
+    type = "S"
+  }
+
   # Sort reviews by date
   local_secondary_index {
     name            = "createdAt-index"
     range_key       = "createdAt"
+    projection_type = "ALL"
+  }
+
+  # Query reviews by user (for profile page)
+  global_secondary_index {
+    name            = "userId-index"
+    hash_key        = "userId"
     projection_type = "ALL"
   }
 
